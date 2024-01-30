@@ -206,4 +206,37 @@ class Application: SVTBase
         return $controlResult;
     }
 
+    hidden [ControlResult] CheckAppDoesNotHaveLongExpirySecrets([ControlResult] $controlResult)
+    {
+        $app = $this.GetResourceObject()
+
+        $clientCredentials = $app.PasswordCredentials
+        if ($null -eq $clientCredentials -or $clientCredentials.Count -eq 0)
+        {
+                $controlResult.AddMessage([VerificationResult]::Passed,
+                                        [MessageData]::new("App [$($app.DisplayName)] has no secrets configured."));
+        }
+        else
+        {
+            $HasLongExpirySecrets = $false
+            foreach ($clientCredential in $clientCredentials) 
+            { 
+                if ($clientCredential.EndDate -gt ([datetime]::UtcNow).AddDays(90)) 
+                {
+                    $HasLongExpirySecrets = $true
+                }
+            }
+            if ($HasLongExpirySecrets)
+            {
+                $controlResult.AddMessage([VerificationResult]::Failed,
+                                    [MessageData]::new("One or more secrets of app [$($app.DisplayName)] have long expiry (>90 days)."));
+            }
+            else {
+                $controlResult.AddMessage([VerificationResult]::Passed,
+                                    [MessageData]::new("All secrets of app [$($app.DisplayName)] have short expiry (<=90 days)."));                
+            }
+        }
+        return $controlResult;
+    }
+
 }
