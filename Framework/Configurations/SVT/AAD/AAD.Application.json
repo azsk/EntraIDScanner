@@ -160,6 +160,22 @@
         "Automated"
       ],
       "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Minimize_Permissions_Requested",
+      "Description": "App Registrations should request the least permissions needed to various resources",
+      "Id": "App230",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppUsesMiniminalPermissions",
+      "Rationale": "Apps should only require the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to API permissions and remove any risky permissions.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated"
+      ],
+      "Enabled": true
     }
   ]
 }

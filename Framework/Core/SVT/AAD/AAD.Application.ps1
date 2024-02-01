@@ -2,17 +2,30 @@ Set-StrictMode -Version Latest
 class Application: SVTBase
 {    
 	hidden [PSObject] $ResourceObject;
+    hidden [Hashtable] $ServicePrincipalCache;
+    hidden [PsObject] $RiskyPermissions;
 
     Application([string] $tenantId, [SVTResource] $svtResource): Base($tenantId,$svtResource) 
     {
 
         $objId = $svtResource.ResourceId
         $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
+        $this.ServicePrincipalCache = @{}
+        $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
     }
 
     hidden [PSObject] GetResourceObject()
     {
         return $this.ResourceObject;
+    }
+
+    hidden [PSObject] FetchServicePrincipalByAppId($appId)
+    {
+        if (!($this.ServicePrincipalCache.ContainsKey($appId)))
+        {
+            $this.ServicePrincipalCache[$appId] = Get-AzureADServicePrincipal -Filter "AppId eq '$($appId)'"
+        }
+        return $this.ServicePrincipalCache[$appId]
     }
 
     hidden [ControlResult] CheckOldTestDemoApps([ControlResult] $controlResult)
@@ -206,4 +219,59 @@ class Application: SVTBase
         return $controlResult;
     }
 
+    hidden [ControlResult] CheckAppUsesMiniminalPermissions([ControlResult] $controlResult)
+    {
+        $app = $this.GetResourceObject()
+        $globalAppFlaggedPermissions = [System.Collections.ArrayList]::new()
+        foreach ($resource in $app.RequiredResourceAccess) 
+        {
+            $spAppId = $resource.ResourceAppId
+            if ($null -ne $this.RiskyPermissions.PsObject.Properties[$spAppId])
+            {
+                $spApp = $this.RiskyPermissions.$spAppId
+                $flaggedDelegatePermissions = [System.Collections.ArrayList]::new()
+                $flaggedApplicationPermissions = [System.Collections.ArrayList]::new()
+                foreach ($resourceAccess in $resource.ResourceAccess)
+                {
+                    $resourceId = $resourceAccess.Id
+                    if ($null -ne $spApp.Permissions.PSObject.Properties[$resourceId]) 
+                    {
+                       $spAppPermission = $spApp.Permissions.$resourceId
+                       if ($spAppPermission.Type -eq 'Application')
+                       {
+                            $flaggedApplicationPermissions.Add($spAppPermission.PermissionName)
+                       }
+                       else
+                       {
+                            $flaggedDelegatePermissions.Add($spAppPermission.PermissionName)
+                       }
+                    }
+                }
+
+                if ($flaggedDelegatePermissions.Count -gt 0 -or $flaggedApplicationPermissions.Count -gt 0)
+                {
+                    $globalAppFlaggedPermissions.Add([PSCustomObject]@{
+                        'API/Permission Name ' = $spApp.ResourceName
+                        'Delegated' = $flaggedDelegatePermissions -join ","
+                        'Application' = $flaggedApplicationPermissions  -join ","
+                    })
+                }
+            }
+        }
+
+        if ($globalAppFlaggedPermissions.Count -gt 0)
+        {
+            $outputCsv = $globalAppFlaggedPermissions | ConvertTo-Csv -NoTypeInformation
+            $controlResult.AddMessage([VerificationResult]::Failed,
+                                    [MessageData]::new("App [$($app.DisplayName)] uses the following risky permissions."));
+            $outputCsv | ForEach-Object {$controlResult.AddMessage([VerificationResult]::Failed, [MessageData]::new($_))}
+        }
+        else
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+                                        [MessageData]::new("App [$($app.DisplayName)] does not use risky permissions."));
+        }
+
+        return $controlResult;
+    }
 }
