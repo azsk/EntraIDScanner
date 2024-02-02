@@ -19,6 +19,11 @@ class Application: SVTBase
         return $this.ResourceObject;
     }
 
+    <# 
+        TODO: Currently we don't fetch service prinicipals belonging to an application, so this method is not used.
+        However we might need to consider the possibility of dynamically retrieving the service prinicipals for an application and 
+        comparing them with the risky ones we have at a datastore like DB.
+    #>
     hidden [PSObject] FetchServicePrincipalByAppId($appId)
     {
         if (!($this.ServicePrincipalCache.ContainsKey($appId)))
@@ -278,7 +283,7 @@ class Application: SVTBase
             $controlResult.AddMessage([VerificationResult]::Failed,
                                     [MessageData]::new("App [$($app.DisplayName)] uses the following risky permissions."));
             $controlResult.AddMessage(($globalAppFlaggedPermissions | Format-Table -AutoSize | Out-String -Width 512));
-            $controlResult.DetailedResult = $globalAppFlaggedPermissions | ConvertTo-Json -Depth 3;
+            $controlResult.DetailedResult = (ConvertTo-Json $globalAppFlaggedPermissions -Depth 3);
         }
         else
         {
