@@ -163,7 +163,7 @@
     },
     {
       "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Use_Implicit_Flow",
-      "Description": "The usage of implicit authentication poses security problems, because it exposes access tokens.",
+      "Description": "Implicit Flow should not be allowed in App Registration",
       "Id": "App210",
       "ControlSeverity": "High",
       "Automated": "Yes",
@@ -173,7 +173,8 @@
       "Tags": [
         "SDL",
         "TCP",
-        "Automated"
+        "Automated",
+        "AuthN"
       ],
       "Enabled": true
     }
