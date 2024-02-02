@@ -221,41 +221,39 @@ class Application: SVTBase
 
     hidden [ControlResult] CheckAppUsesMiniminalPermissions([ControlResult] $controlResult)
     {
-        $app = $this.GetResourceObject()
-        $globalAppFlaggedPermissions = [System.Collections.ArrayList]::new()
+        $app = $this.GetResourceObject();
+        $globalAppFlaggedPermissions = [System.Collections.ArrayList]::new();
         foreach ($resource in $app.RequiredResourceAccess) 
         {
-            $spAppId = $resource.ResourceAppId
-            if ($null -ne $this.RiskyPermissions.PsObject.Properties[$spAppId])
+            $flaggedDelegatePermissions = [System.Collections.ArrayList]::new();
+            $flaggedApplicationPermissions = [System.Collections.ArrayList]::new();
+            $resourceName = "";
+
+            foreach ($resourceAccess in $resource.ResourceAccess)
             {
-                $spApp = $this.RiskyPermissions.$spAppId
-                $flaggedDelegatePermissions = [System.Collections.ArrayList]::new()
-                $flaggedApplicationPermissions = [System.Collections.ArrayList]::new()
-                foreach ($resourceAccess in $resource.ResourceAccess)
+                $resourceId = $resourceAccess.Id
+                if ($null -ne $this.RiskyPermissions.PSObject.Properties[$resourceId]) 
                 {
-                    $resourceId = $resourceAccess.Id
-                    if ($null -ne $spApp.Permissions.PSObject.Properties[$resourceId]) 
+                    $resourceName = $this.RiskyPermissions.$resourceId.ResourceName
+                    $spAppPermission = $this.RiskyPermissions.$resourceId
+                    if ($spAppPermission.Type -eq 'Application')
                     {
-                       $spAppPermission = $spApp.Permissions.$resourceId
-                       if ($spAppPermission.Type -eq 'Application')
-                       {
-                            $flaggedApplicationPermissions.Add($spAppPermission.PermissionName)
-                       }
-                       else
-                       {
-                            $flaggedDelegatePermissions.Add($spAppPermission.PermissionName)
-                       }
+                        $flaggedApplicationPermissions.Add($spAppPermission.PermissionName)
+                    }
+                    else
+                    {
+                        $flaggedDelegatePermissions.Add($spAppPermission.PermissionName)
                     }
                 }
+            }
 
-                if ($flaggedDelegatePermissions.Count -gt 0 -or $flaggedApplicationPermissions.Count -gt 0)
-                {
-                    $globalAppFlaggedPermissions.Add([PSCustomObject]@{
-                        'API/Permission Name ' = $spApp.ResourceName
-                        'Delegated' = $flaggedDelegatePermissions -join ","
-                        'Application' = $flaggedApplicationPermissions  -join ","
-                    })
-                }
+            if ($flaggedDelegatePermissions.Count -gt 0 -or $flaggedApplicationPermissions.Count -gt 0)
+            {
+                $globalAppFlaggedPermissions.Add([PSCustomObject]@{
+                    'API/Permission Name ' = $resourceName
+                    'Delegated' = $flaggedDelegatePermissions -join ","
+                    'Application' = $flaggedApplicationPermissions  -join ","
+                })
             }
         }
 
