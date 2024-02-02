@@ -190,7 +190,9 @@
       "Tags": [
         "SDL",
         "TCP",
-        "Automated"
+        "Automated",
+        "AuthZ",
+        "RBAC"
       ],
       "Enabled": true
     }
