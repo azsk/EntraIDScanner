@@ -177,6 +177,24 @@
         "AuthN"
       ],
       "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Add_FTE_Owners_Only",
+      "Description": "All owners of the app registration should be FTE only.",
+      "Id": "App250",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppHasFTEOwnerOnly",
+      "Rationale": "Owners of the app have access to critical app settings such as auth flows, credentials and API permissions. Providing ownership to FTE accounts only leads to better app governance and prevents malicious users from outside the enterprise from accessing critical data.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to owners. 4. Remove any non FTE account",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ",
+        "RBAC"
+      ],
+      "Enabled": true
     }
   ]
 }
