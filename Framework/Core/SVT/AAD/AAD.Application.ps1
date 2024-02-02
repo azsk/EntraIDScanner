@@ -269,7 +269,7 @@ class Application: SVTBase
             {
                 $controlResult.AddMessage([VerificationResult]::Failed,
                 "Following redirect URLs with wildcard characters were found: ", $($urlsWithWildcard | Format-Table -AutoSize | Out-String));
-                $controlResult.DetailedResult = ($urlsWithWildcard | ConvertTo-Json);
+                $controlResult.DetailedResult = (ConvertTo-Json $urlsWithWildcard);
             }
         }
         
@@ -328,7 +328,7 @@ class Application: SVTBase
             {
                 $controlResult.AddMessage([VerificationResult]::Failed,
                 "Following redirect URLs with no ownership were found: ", $($danglingUrls | Format-Table -AutoSize | Out-String));
-                $controlResult.DetailedResult = ($danglingUrls | ConvertTo-Json);
+                $controlResult.DetailedResult = (ConvertTo-Json $danglingUrls);
             }
         }
         
