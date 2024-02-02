@@ -207,9 +207,13 @@ class WriteSummaryFile: FileOutputBase
                         Description = $item.ControlItem.Description;
                         FeatureName = $item.FeatureName;
                         ChildResourceName = $_.ChildResourceName;
-						Recommendation = $item.ControlItem.Recommendation;	
+						Recommendation = $item.ControlItem.Recommendation;
 				
                     };
+					if($this.InvocationContext.BoundParameters['IncludeDetailedResult'] -eq $True)
+					{
+                      $csvItem.DetailedResult=$item.ControlResults.DetailedResult;	
+					}
 					if($_.VerificationResult -ne [VerificationResult]::NotScanned)
 					{
 						$csvItem.Status = $_.VerificationResult.ToString();
