@@ -275,10 +275,10 @@ class Application: SVTBase
 
         if ($globalAppFlaggedPermissions.Count -gt 0)
         {
-            $outputCsv = $globalAppFlaggedPermissions | ConvertTo-Csv -NoTypeInformation | Out-String
             $controlResult.AddMessage([VerificationResult]::Failed,
                                     [MessageData]::new("App [$($app.DisplayName)] uses the following risky permissions."));
-            $controlResult.AddMessage([VerificationResult]::Failed, [MessageData]::($outputCsv));
+            $controlResult.AddMessage(($globalAppFlaggedPermissions | Format-Table -AutoSize | Out-String -Width 512));
+            $controlResult.DetailedResult = $globalAppFlaggedPermissions | ConvertTo-Json -Depth 3;
         }
         else
         {
