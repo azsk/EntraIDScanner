@@ -218,18 +218,23 @@ class Application: SVTBase
         }
         else
         {
-            $HasLongExpirySecrets = $false
+            $expiredSecrets = [System.Collections.ArrayList]::new();
             foreach ($clientCredential in $clientCredentials) 
             { 
                 if ($clientCredential.EndDate -gt ([datetime]::UtcNow).AddDays(90)) 
                 {
-                    $HasLongExpirySecrets = $true
+                    $expiredSecrets.Add([PSCustomObject]@{
+                        Expiry = $clientCredential.EndDate
+                        SecretId = $clientCredential.KeyId
+                    })
                 }
             }
-            if ($HasLongExpirySecrets)
+
+            if ($expiredSecrets.Count -gt 0)
             {
                 $controlResult.AddMessage([VerificationResult]::Failed,
-                                    [MessageData]::new("One or more secrets of app [$($app.DisplayName)] have long expiry (>90 days)."));
+                                    [MessageData]::new("One or more secrets of app [$($app.DisplayName)] have long expiry (>90 days). Please review them below"));
+                $controlResult.AddMessage(($expiredSecrets | Format-Table -AutoSize | Out-String -Width 512));
             }
             else {
                 $controlResult.AddMessage([VerificationResult]::Passed,

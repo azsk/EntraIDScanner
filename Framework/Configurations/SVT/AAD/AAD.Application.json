@@ -163,7 +163,7 @@
     },
     {
       "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Allow_Long_Expiry_Secrets",
-      "Description": "Secrets are meant to be rotated periodically. Do not allow long expiry secrets",
+      "Description": "App Registrations should not have long expiry secrets.",
       "Id": "App220",
       "ControlSeverity": "High",
       "Automated": "Yes",
@@ -173,7 +173,8 @@
       "Tags": [
         "SDL",
         "TCP",
-        "Automated"
+        "Automated",
+        "AuthN"
       ],
       "Enabled": true
     }
