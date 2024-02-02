@@ -251,7 +251,7 @@ class Application: SVTBase
                 $controlResult.AddMessage([VerificationResult]::Failed,
                                     [MessageData]::new("One or more secrets of app [$($app.DisplayName)] have long expiry (>90 days). Please review them below"));
                 $controlResult.AddMessage(($expiredSecrets | Format-Table -AutoSize | Out-String -Width 512));
-                $controlResult.DetailedResult =  $expiredSecrets | ConvertTo-Json -Depth 3;
+                $controlResult.DetailedResult =  ConvertTo-Json $expiredSecrets -Depth 3;
             }
             else {
                 $controlResult.AddMessage([VerificationResult]::Passed,
