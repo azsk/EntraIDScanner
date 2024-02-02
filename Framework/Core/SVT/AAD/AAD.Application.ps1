@@ -139,6 +139,22 @@ class Application: SVTBase
         return $controlResult;
     }
 
+    hidden [ControlResult] CheckImplicitFlowIsNotUsed([ControlResult] $controlResult)
+    {
+        $app = $this.GetResourceObject()
+        if ($app.Oauth2AllowImplicitFlow -eq $true)
+        {
+            $controlResult.AddMessage([VerificationResult]::Failed,
+                                        "Implicit Authentication flow is enabled for app [$($app.DisplayName)].");
+        }
+        else
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+                                        "Implicit Authentication flow is disabled for app [$($app.DisplayName)].");
+        }
+        return $controlResult;
+    }
+
     hidden [ControlResult] CheckPrivacyDisclosure([ControlResult] $controlResult)
     {
         $app = $this.GetResourceObject()
