@@ -179,6 +179,23 @@
       "Enabled": true
     },
     {
+      "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Allow_Long_Expiry_Secrets",
+      "Description": "App Registrations should not have long expiry secrets.",
+      "Id": "App220",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppDoesNotHaveLongExpirySecrets",
+      "Rationale": "If client secrets are a must to be used, ensure that the secret expiry is not more than 90 days. Long expiry secrets can lead to unauthorized access for a longer window in case of secret compromise.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to certificates and secrets and delete any client secrets with expiry more than 90 days",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthN"
+      ],
+      "Enabled": true
+    },
+    {
       "ControlID": "EntraID_AppRegistration_AuthZ_Minimize_Permissions_Requested",
       "Description": "App Registrations should request the least permissions needed to various resources",
       "Id": "App230",
