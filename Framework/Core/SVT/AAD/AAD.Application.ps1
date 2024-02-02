@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 class Application: SVTBase
 {    
 	hidden [PSObject] $ResourceObject;
+    hidden [hashtable] $DNSCache = @{};
 
     Application([string] $tenantId, [SVTResource] $svtResource): Base($tenantId,$svtResource) 
     {
@@ -13,6 +14,24 @@ class Application: SVTBase
     hidden [PSObject] GetResourceObject()
     {
         return $this.ResourceObject;
+    }
+
+    hidden [bool] IsURLDangling([string] $uri)
+    {
+        if($this.DNSCache.ContainsKey($uri))
+        {
+            return $this.DNSCache[$uri];
+        }
+        $ownership = Resolve-DnsName -Name $uri;
+        if($null -eq $ownership)
+        {
+            $this.DNSCache[$uri] = $false;
+        }
+        else
+        {
+            $this.DNSCache[$uri] = $true;
+        }
+        return $this.DNSCache[$uri];
     }
 
     hidden [ControlResult] CheckOldTestDemoApps([ControlResult] $controlResult)
@@ -203,6 +222,101 @@ class Application: SVTBase
                                     [MessageData]::new("All owners of app: [$($app.DisplayName)] are 'Guest' users. At least one FTE owner should be added."));                
             }
         }
+        return $controlResult;
+    }
+
+    hidden [ControlResult] CheckRedirectURIsWithWilcard([ControlResult] $controlResult)
+    {
+        $app = $this.GetResourceObject()
+        if($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0)
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+            "No redirect URLs were found.");
+        }
+        else
+        {
+            $urlsWithWildcard = @()
+            foreach ($url  in $app.ReplyURLs)
+            {
+                if ($url.Contains("*"))
+                {
+                    $urlsWithWildcard += $url
+                }
+            }
+
+            if ($urlsWithWildcard.Count -eq 0)
+            {
+                $controlResult.AddMessage([VerificationResult]::Passed,
+                                        "No redirect URLs with wildcards were found.");
+            }
+            else
+            {
+                $controlResult.AddMessage([VerificationResult]::Failed,
+                "Following redirect URLs with wildcard characters were found: ", $($urlsWithWildcard | Format-Table -AutoSize | Out-String));
+                $controlResult.DetailedResult = ($urlsWithWildcard | ConvertTo-Json);
+            }
+        }
+        
+
+        return $controlResult;
+    }
+
+    hidden [ControlResult] CheckDanglingRedirectURIs([ControlResult] $controlResult)
+    {
+        $app = $this.GetResourceObject()
+        if($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0)
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+            "No redirect URLs were found.");
+        }
+        else
+        {
+            $danglingUrls = @()
+            
+            foreach ($url  in $app.ReplyURLs)
+            {
+                $parsedUrl = $url
+                if($parsedUrl -match "http://")
+                {
+                    $parsedUrl = ($url -split "http://" -split "/")[1]
+                }
+                elseif($parsedUrl -match "https://")
+                {
+                    $parsedUrl = ($url -split "https://" -split "/")[1]
+                }
+                else 
+                {
+                    continue;
+                }
+
+                if ($parsedUrl.Contains("*"))
+                {
+                    $danglingUrls += $url
+                }
+                else 
+                {
+                    $isUrlDangling = $this.IsURLDangling($parsedUrl);
+                    if(!$isUrlDangling)
+                    {
+                        $danglingUrls += $url
+                    }
+                }
+            }
+
+            if ($danglingUrls.Count -eq 0)
+            {
+                $controlResult.AddMessage([VerificationResult]::Passed,
+                                        "No dangling redirect URLs were found.");
+            }
+            else
+            {
+                $controlResult.AddMessage([VerificationResult]::Failed,
+                "Following redirect URLs with no ownership were found: ", $($danglingUrls | Format-Table -AutoSize | Out-String));
+                $controlResult.DetailedResult = ($danglingUrls | ConvertTo-Json);
+            }
+        }
+        
+
         return $controlResult;
     }
 

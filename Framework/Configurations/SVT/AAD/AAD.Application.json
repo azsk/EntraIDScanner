@@ -160,6 +160,40 @@
         "Automated"
       ],
       "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Do_Not_Use_Wildcards_In_Redirect_URIs",
+      "Description": "Redirect URIs should not contain wildcard characters.",
+      "Id": "App250",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckRedirectURIsWithWilcard",
+      "Rationale": "Allowing wildcard in redirect URIs makes it easier for attackers to get auth tokens from the app by creating similar redirect URIs and phishing users to malicious URLs. For public clients this can provide attackers directly with an access token whereas for confidential apps, attackers can leverage auth code injection attacks to get an access token.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Configure all redirect URIs with wildcards to exact domains",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ"
+      ],
+      "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Remove_Dangling_URIs",
+      "Description": "Redirect URIs should have proper DNS ownership.",
+      "Id": "App260",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckDanglingRedirectURIs",
+      "Rationale": "Allowing redirect URIs with no DNS ownership allows attackers to get ownership of the URL before the actual owners, enabling them to get auth tokens by phishing users to these sites under attackers' controls.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Configure all redirect URIs and their DNS records.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ"
+      ],
+      "Enabled": true
     }
   ]
 }
