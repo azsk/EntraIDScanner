@@ -52,6 +52,7 @@ class ControlResult
 	[int] $MaximumAllowedGraceDays=0;
 	[String] $UserComments	
     [MessageData[]] $Messages = @();
+	[string] $DetailedResult = [Constants]::DefaultAdditionalDetail;
 
     [void] AddMessage([MessageData] $messageData)
     {
