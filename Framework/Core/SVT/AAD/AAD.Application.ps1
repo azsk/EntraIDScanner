@@ -237,7 +237,7 @@ class Application: SVTBase
             $expiredSecrets = [System.Collections.ArrayList]::new();
             foreach ($clientCredential in $clientCredentials) 
             { 
-                if ($clientCredential.EndDate -gt ([datetime]::UtcNow).AddDays(90)) 
+                if ($clientCredential.EndDate -gt ([datetime]::UtcNow).AddDays($this.ControlSettings.Application.CredentialExpiryThresholdInDays)) 
                 {
                     $expiredSecrets.Add([PSCustomObject]@{
                         Expiry = $clientCredential.EndDate
