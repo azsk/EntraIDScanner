@@ -189,6 +189,7 @@ _Pvt_Extensions/
 ModelManifest.xml
 
 *.dll
+!Lib/*.dll
 *.exe
 *.pubxml
 **/packages/*
@@ -197,3 +198,4 @@ ModelManifest.xml
 /src/AzSK.sln
 /src/AzSK.Debug
 /src/AzSK/AzSK.sln
+/.vscode/launch.json

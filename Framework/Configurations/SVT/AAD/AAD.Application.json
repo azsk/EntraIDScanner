@@ -160,6 +160,23 @@
         "Automated"
       ],
       "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Use_Implicit_Flow",
+      "Description": "Implicit Flow should not be allowed in App Registration",
+      "Id": "App210",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckImplicitFlowIsNotUsed",
+      "Rationale": "Using implicit flow, exposes the access token in the URL fragment, and does not support PKCE, making it vulnerable to access token leage and token replay attacks.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Disable access tokens used for implicit flows.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthN"
+      ],
+      "Enabled": true
     }
   ]
 }
