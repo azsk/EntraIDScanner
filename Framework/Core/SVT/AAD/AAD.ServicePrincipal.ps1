@@ -174,7 +174,7 @@ class ServicePrincipal: SVTBase
             return $adminConsentRiskyPermissions;
         }
 
-        $spns = (Get-AzureADObjectByObjectId -ObjectIds ($delegatedPermissionGrants| ForEach-Object { $_.ResourceId } | Get-Unique) | Group-Object -Property ObjectId -AsHashTable);
+        $spns = ([ResourceHelper]::FetchResourcesByObjectIdsAndCache(($delegatedPermissionGrants| ForEach-Object { $_.ResourceId })) | Group-Object -Property ObjectId -AsHashTable);
         foreach($delegatedPermissionGrant in $delegatedPermissionGrants)
         {
             $resourceId = $delegatedPermissionGrant.ResourceId;
@@ -213,7 +213,8 @@ class ServicePrincipal: SVTBase
         {
             return $userConsentRiskyPermissions;
         }
-        $spns = (Get-AzureADObjectByObjectId -ObjectIds ($delegatedPermissionGrants| ForEach-Object { $_.ResourceId } | Get-Unique) | Group-Object -Property ObjectId -AsHashTable);
+ 
+        $spns = ([ResourceHelper]::FetchResourcesByObjectIdsAndCache(($delegatedPermissionGrants| ForEach-Object { $_.ResourceId })) | Group-Object -Property ObjectId -AsHashTable);
         foreach($delegatedPermissionGrant in $delegatedPermissionGrants)
         {      
             $resourceId = $delegatedPermissionGrant.ResourceId;
