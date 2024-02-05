@@ -179,6 +179,24 @@
       "Enabled": true
     },
     {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Add_FTE_Owners_Only",
+      "Description": "All owners of the app registration should be FTE only.",
+      "Id": "App250",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppHasFTEOwnerOnly",
+      "Rationale": "Owners of the app have access to critical app settings such as auth flows, credentials and API permissions. Providing ownership to FTE accounts only leads to better app governance and prevents malicious users from outside the enterprise from accessing critical data.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to owners. 4. Remove any non FTE account",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ",
+        "RBAC"
+      ],
+        "Enabled": true
+    },
+    {
       "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Allow_Long_Expiry_Secrets",
       "Description": "App Registrations should not have long expiry secrets.",
       "Id": "App220",
@@ -192,6 +210,24 @@
         "TCP",
         "Automated",
         "AuthN"
+      ],
+      "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Minimize_Permissions_Requested",
+      "Description": "App Registrations should request the least permissions needed to various resources",
+      "Id": "App230",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppUsesMiniminalPermissions",
+      "Rationale": "Apps should only require the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to API permissions and remove any risky permissions.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ",
+        "RBAC"
       ],
       "Enabled": true
     }

@@ -103,6 +103,38 @@ class ServicePrincipal: SVTBase
         return $controlResult;
     }
 
+    hidden [ControlResult] CheckEnterpriseApplicationHasFTEOwnerOnly([ControlResult] $controlResult)
+    {
+        $app = $this.GetResourceObject()
+
+        $owners = [array] (Get-AzureADServicePrincipalOwner -ObjectId $app.ObjectId)
+        if ($owners -eq $null -or $owners.Count -eq 0)
+        {
+                $controlResult.AddMessage([VerificationResult]::Failed,
+                                        [MessageData]::new("App [$($app.DisplayName)] has no owner configured."));
+        }
+        elseif ($owners.Count -gt 0)
+        {
+            $guestOwners = @();
+            $owners | % { 
+                if ($_.UserType -eq 'Guest') 
+                {
+                    $guestOwners += $_.Mail
+                }
+            }
+            if ($guestOwners.Count -gt 0)
+            {
+                $controlResult.AddMessage([VerificationResult]::Failed,"The following guest user(s) were found: ", $($guestOwners | Format-Table -AutoSize | Out-String));
+                $controlResult.DetailedResult = (ConvertTo-Json $guestOwners);
+            }
+            else {
+                $controlResult.AddMessage([VerificationResult]::Passed,
+                                    [MessageData]::new("All owners of the enterprise application [$($app.DisplayName)] are FTEs."));                
+            }
+        }
+        return $controlResult;
+    }
+
     hidden [ControlResult] CheckEnterpriseAppUsesMiniminalPermissions([ControlResult] $controlResult)
     {
         $spn = $this.GetResourceObject();

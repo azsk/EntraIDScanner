@@ -55,6 +55,24 @@
           "Enabled": true
         },
         {
+          "ControlID": "EntraID_EnterpriseApplication_AuthZ_Add_FTE_Owners_Only",
+          "Description": "All owners of the enterprise application should be FTE only.",
+          "Id": "SPN140",
+          "ControlSeverity": "High",
+          "Automated": "Yes",
+          "MethodName": "CheckEnterpriseApplicationHasFTEOwnerOnly",
+          "Rationale": "Owners of the enterprise app have access to critical app settings such as group permissions, credentials and user assignments. Providing ownership to FTE accounts only leads to better app governance and prevents malicious users from outside the enterprise from accessing critical data.",
+          "Recommendation": "Refer: TODO",
+          "Tags": [
+            "SDL",
+            "TCP",
+            "Automated",
+            "AuthZ",
+            "RBAC"
+          ],
+          "Enabled": true
+        },
+        {
           "ControlID": "EntraID_EnterpriseApplication_AuthZ_Minimize_Permissions_Granted_To_Multitenant_Apps",
           "Description": "Enterprise (line of business) apps should be granted the least permissions needed to various resources",
           "Id": "AppXXX TODO: Replace before merging",
