@@ -198,7 +198,7 @@
     {
       "ControlID": "EntraID_AppRegistration_AuthZ_Remove_Dangling_URIs",
       "Description": "Redirect URIs should have proper DNS ownership.",
-      "Id": "App230",
+      "Id": "App240",
       "ControlSeverity": "High",
       "Automated": "Yes",
       "MethodName": "CheckDanglingRedirectURIs",
@@ -208,7 +208,60 @@
         "SDL",
         "TCP",
         "Automated",
-        "AuthZ"
+        "AuthZ"      
+      ],
+        "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Add_FTE_Owners_Only",
+      "Description": "All owners of the app registration should be FTE only.",
+      "Id": "App250",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppHasFTEOwnerOnly",
+      "Rationale": "Owners of the app have access to critical app settings such as auth flows, credentials and API permissions. Providing ownership to FTE accounts only leads to better app governance and prevents malicious users from outside the enterprise from accessing critical data.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to owners. 4. Remove any non FTE account",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ",
+        "RBAC"
+      ],
+        "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Allow_Long_Expiry_Secrets",
+      "Description": "App Registrations should not have long expiry secrets.",
+      "Id": "App220",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppDoesNotHaveLongExpirySecrets",
+      "Rationale": "If client secrets are a must to be used, ensure that the secret expiry is not more than 90 days. Long expiry secrets can lead to unauthorized access for a longer window in case of secret compromise.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to certificates and secrets and delete any client secrets with expiry more than 90 days",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthN"
+      ],
+      "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Minimize_Permissions_Requested",
+      "Description": "App Registrations should request the least permissions needed to various resources",
+      "Id": "App230",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppUsesMiniminalPermissions",
+      "Rationale": "Apps should only require the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to API permissions and remove any risky permissions.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ",
+        "RBAC"
       ],
       "Enabled": true
     }

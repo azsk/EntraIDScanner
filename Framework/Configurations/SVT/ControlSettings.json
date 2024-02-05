@@ -56,7 +56,7 @@
   },
   "Application":{
     "TestDemoPoCNames": ["Test", "Demo", "PoC", "Pilot", "Temp"],
-    "TODO": 180
+    "CredentialExpiryThresholdInDays": 90
   },
   "ServicePrincipal":{
     "ApproachingExpiryThresholdInDays": 30
