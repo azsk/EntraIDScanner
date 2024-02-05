@@ -168,8 +168,13 @@ class ServicePrincipal: SVTBase
             }
         }
 
-        $delegatedPermissionGrants = (Get-AzureADServicePrincipalOauth2PermissionGrant -ObjectId $spn.ObjectId) | Where-Object { $_.ConsentType -eq 'AllPrincipals' };
-        $spns = (Get-AzureADObjectByObjectId -ObjectIds ($delegatedPermissionGrants.ResourceId | Get-Unique) | Group-Object -Property ObjectId -AsHashTable);
+        $delegatedPermissionGrants = @(Get-AzureADServicePrincipalOauth2PermissionGrant -ObjectId $spn.ObjectId | Where-Object { $_.ConsentType -eq 'AllPrincipals' })
+        if ($delegatedPermissionGrants.Count -eq 0)
+        {
+            return $adminConsentRiskyPermissions;
+        }
+
+        $spns = (Get-AzureADObjectByObjectId -ObjectIds ($delegatedPermissionGrants| ForEach-Object { $_.ResourceId } | Get-Unique) | Group-Object -Property ObjectId -AsHashTable);
         foreach($delegatedPermissionGrant in $delegatedPermissionGrants)
         {
             $resourceId = $delegatedPermissionGrant.ResourceId;
@@ -203,8 +208,12 @@ class ServicePrincipal: SVTBase
         $spn = $this.GetResourceObject();
         $userConsentRiskyPermissions = @{}
     
-        $delegatedPermissionGrants = (Get-AzureADServicePrincipalOauth2PermissionGrant -ObjectId $spn.ObjectId) | Where-Object { $_.ConsentType -eq 'Principal' };
-        $spns = (Get-AzureADObjectByObjectId -ObjectIds ($delegatedPermissionGrants.ResourceId | Get-Unique) | Group-Object -Property ObjectId -AsHashTable);
+        $delegatedPermissionGrants = @(Get-AzureADServicePrincipalOauth2PermissionGrant -ObjectId $spn.ObjectId | Where-Object { $_.ConsentType -eq 'Principal' });
+        if ($delegatedPermissionGrants.Count -eq 0)
+        {
+            return $userConsentRiskyPermissions;
+        }
+        $spns = (Get-AzureADObjectByObjectId -ObjectIds ($delegatedPermissionGrants| ForEach-Object { $_.ResourceId } | Get-Unique) | Group-Object -Property ObjectId -AsHashTable);
         foreach($delegatedPermissionGrant in $delegatedPermissionGrants)
         {      
             $resourceId = $delegatedPermissionGrant.ResourceId;
@@ -250,14 +259,14 @@ class ServicePrincipal: SVTBase
         }
     }
 
-    hidden [void] VerifyAndReportRiskyPermissions([ControlResult] $controlResult)
+    hidden [void] VerifyAndReportRiskyPermissions([ControlResult] $controlResult, $includeUserConsentPermissions = $false)
     {
-        $this.FetchAndCacheRiskyPermissions();
+        $this.FetchAndCacheRiskyPermissions($includeUserConsentPermissions);
         if ($this.RiskyAdminConsentPermissionsCache.Count -eq 0 -and $this.RiskyUserConsentPermissionsCache.Count -eq 0)
         {
             $controlResult.AddMessage([VerificationResult]::Passed,
                                     [MessageData]::new("The enterprise application does not have any risky permissions."));
-            return $controlResult;
+            return;
         }
             
         if ($this.RiskyAdminConsentPermissionsCache.Count -gt 0)
@@ -296,7 +305,8 @@ class ServicePrincipal: SVTBase
             return $controlResult              
         }
 
-        $this.VerifyAndReportRiskyPermissions($controlResult);
+        # TODO: Parametrize the $includeUserConsentPermissions
+        $this.VerifyAndReportRiskyPermissions($controlResult, $true);
 
         return $controlResult;
     }
