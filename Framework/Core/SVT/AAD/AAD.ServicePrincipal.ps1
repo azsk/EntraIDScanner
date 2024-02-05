@@ -301,7 +301,7 @@ class ServicePrincipal: SVTBase
         return $controlResult;
     }
 
-    hidden [ControlResult] CheckCrossTenantEnterpriseAppUsesMiniminalPermissions([ControlResult] $controlResult)
+    hidden [ControlResult] CheckEnterpriseMultiTenantAppUsesMiniminalPermissions([ControlResult] $controlResult)
     {
         $spn = $this.GetResourceObject();
         if($spn.ServicePrincipalType -ne "Application")
