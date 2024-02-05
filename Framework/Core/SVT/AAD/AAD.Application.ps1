@@ -22,7 +22,7 @@ class Application: SVTBase
         {
             return $this.DNSCache[$uri];
         }
-        $ownership = Resolve-DnsName -Name $uri;
+        $ownership = Resolve-DnsName -Name $uri -ErrorAction SilentlyContinue;
         if($null -eq $ownership)
         {
             $this.DNSCache[$uri] = $false;
