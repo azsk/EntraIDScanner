@@ -121,7 +121,7 @@ function Get-AzSKAADSecurityStatusUser
 		[int]
 		[Parameter(Position = 1, Mandatory = $false, HelpMessage="Max # of objects to check. Default is 3 (for preview release).")]
 		[Alias("mo")]
-		$MaxObj = 3,
+		$MaxObj,
 
 		[switch]
 		[Parameter(Mandatory = $false, HelpMessage = "Include detailed results in the CSV")]

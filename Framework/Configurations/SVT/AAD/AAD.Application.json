@@ -162,9 +162,26 @@
       "Enabled": true
     },
     {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Do_Not_Use_Wildcards_In_Redirect_URIs",
+      "Description": "Redirect URIs should not contain wildcard characters.",
+      "Id": "App210",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckRedirectURIsWithWilcard",
+      "Rationale": "Allowing wildcard in redirect URIs makes it easier for attackers to get auth tokens from the app by creating similar redirect URIs and phishing users to malicious URLs. For public clients this can provide attackers directly with an access token whereas for confidential apps, attackers can leverage auth code injection attacks to get an access token.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Configure all redirect URIs with wildcards to exact domains",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ"
+      ],
+      "Enabled": true
+    },
+    {
       "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Use_Implicit_Flow",
       "Description": "Implicit Flow should not be allowed in App Registration",
-      "Id": "App210",
+      "Id": "App220",
       "ControlSeverity": "High",
       "Automated": "Yes",
       "MethodName": "CheckImplicitFlowIsNotUsed",
@@ -177,6 +194,23 @@
         "AuthN"
       ],
       "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Remove_Dangling_URIs",
+      "Description": "Redirect URIs should have proper DNS ownership.",
+      "Id": "App240",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckDanglingRedirectURIs",
+      "Rationale": "Allowing redirect URIs with no DNS ownership allows attackers to get ownership of the URL before the actual owners, enabling them to get auth tokens by phishing users to these sites under attackers' controls.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Configure all redirect URIs and their DNS records.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ"      
+      ],
+        "Enabled": true
     },
     {
       "ControlID": "EntraID_AppRegistration_AuthZ_Add_FTE_Owners_Only",
@@ -228,6 +262,23 @@
         "Automated",
         "AuthZ",
         "RBAC"
+      ],
+      "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Allow_Long_Expiry_Secrets_For_Orphaned_Apps",
+      "Description": "App Registrations with no owners should not have long expiry secrets.",
+      "Id": "App260",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckOrphanedAppDoesNotHaveLongExpirySecrets",
+      "Rationale": "Apps without any ownership can either be legacy apps no longer being used or app whose owners have left the organization. If client secrets with secret expiry of more than 90 days are associated this could lead to a longer attack window of app compromise outside the enterprise. Ensuring enterprise security hygiene, either the app or the secret should be deleted and proper ownership should be defined.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to certificates and secrets and delete any client secrets with expiry more than 90 days. 4. Either delete the app or provide ownership to the apps.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthN"
       ],
       "Enabled": true
     }
