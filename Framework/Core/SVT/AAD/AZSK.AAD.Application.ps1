@@ -265,7 +265,7 @@ class Application: SVTBase
                 $controlResult.DetailedResult = (ConvertTo-Json $guestOwners);
             }
             else {
-                $controlResult.AddMessage([VerificationResult]::Passed,
+                $controlResult.AddMessage([VerificationResult]::Passed);
             }
         }
         return $controlResult;
