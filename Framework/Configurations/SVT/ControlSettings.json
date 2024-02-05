@@ -59,6 +59,7 @@
     "CredentialExpiryThresholdInDays": 90
   },
   "ServicePrincipal":{
-    "ApproachingExpiryThresholdInDays": 30
+    "ApproachingExpiryThresholdInDays": 30,
+    "IncludeUserConsentPermissions": false
   }
 }

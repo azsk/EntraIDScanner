@@ -259,10 +259,11 @@ class ServicePrincipal: SVTBase
         }
     }
 
-    hidden [void] VerifyAndReportRiskyPermissions([ControlResult] $controlResult, $includeUserConsentPermissions = $false)
+    hidden [void] VerifyAndReportRiskyPermissions([ControlResult] $controlResult)
     {
+        $includeUserConsentPermissions = $this.ControlSettings.ServicePrincipal.IncludeUserConsentPermissions;
         $this.FetchAndCacheRiskyPermissions($includeUserConsentPermissions);
-        if ($this.RiskyAdminConsentPermissionsCache.Count -eq 0 -and $this.RiskyUserConsentPermissionsCache.Count -eq 0)
+        if ($this.RiskyAdminConsentPermissionsCache.Count -eq 0 -and (!$includeUserConsentPermissions -or $this.RiskyUserConsentPermissionsCache.Count -eq 0))
         {
             $controlResult.AddMessage([VerificationResult]::Passed,
                                     [MessageData]::new("The enterprise application does not have any risky permissions."));
@@ -281,7 +282,7 @@ class ServicePrincipal: SVTBase
             $controlResult.DetailedResult = (ConvertTo-Json $this.RiskyAdminConsentPermissionsCache -Depth 5);
         }
     
-        if ($this.RiskyUserConsentPermissionsCache.Count -gt 0)
+        if ($includeUserConsentPermissions -and $this.RiskyUserConsentPermissionsCache.Count -gt 0)
         {
             $controlResult.AddMessage([VerificationResult]::Failed,
             [MessageData]::new("The following risky permissions are granted to the enterprise application with user consent: $($this.SPNName)"));
@@ -306,7 +307,7 @@ class ServicePrincipal: SVTBase
         }
 
         # TODO: Parametrize the $includeUserConsentPermissions
-        $this.VerifyAndReportRiskyPermissions($controlResult, $true);
+        $this.VerifyAndReportRiskyPermissions($controlResult);
 
         return $controlResult;
     }
