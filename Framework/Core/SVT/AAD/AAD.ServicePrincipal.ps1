@@ -133,6 +133,20 @@ class ServicePrincipal: SVTBase
         return $controlResult;
     }
 
+    hidden [ControlResult] CheckEnterpiseApplicationDoesNotUsePasswordCredentials([ControlResult] $controlResult)
+	{
+        $spn = $this.GetResourceObject()
+        if ($spn.ServicePrincipalType -ne 'Application')
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+                                    [MessageData]::new("SPN is not of type 'Application'."));
+            return $controlResult;
+        }
+
+        $this.CheckSPNPasswordCredentials($controlResult)
+        return $controlResult;
+    }
+
     <#
         hidden [ControlResult] TBD([ControlResult] $controlResult)
         {
