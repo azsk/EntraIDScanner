@@ -6,6 +6,7 @@ class Application: SVTBase {
 
     hidden [Hashtable] $ServicePrincipalCache;
     hidden [PsObject] $RiskyPermissions;
+    hidden [PSObject] $AppOwners;
 
     Application([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) {
 
@@ -13,6 +14,7 @@ class Application: SVTBase {
         $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
+        $this.AppOwners = [array] (Get-AzureADApplicationOwner -ObjectId $objId)
     }
 
     hidden [PSObject] GetResourceObject() {
@@ -32,6 +34,21 @@ class Application: SVTBase {
         }
         return $this.DNSCache[$uri];
     }
+
+    hidden [System.Collections.ArrayList] GetExpiredSecrets([PSObject] $secrets)
+    {
+        $secretsWithLongExpiry = [System.Collections.ArrayList]::new();
+        foreach ($secret in $secrets) { 
+            if ($secret.EndDate -gt ([datetime]::UtcNow).AddDays($this.ControlSettings.Application.CredentialExpiryThresholdInDays)) {
+                $secretsWithLongExpiry.Add([PSCustomObject]@{
+                        ExpiryInDays = ($secret.EndDate - [datetime]::UtcNow).Days
+                        SecretId     = $secret.KeyId
+                    })
+            }
+        }
+        return $secretsWithLongExpiry;
+    }
+
     <# 
         TODO: Currently we don't fetch service prinicipals belonging to an application, so this method is not used.
         However we might need to consider the possibility of dynamically retrieving the service prinicipals for an application and 
@@ -179,14 +196,13 @@ class Application: SVTBase {
     hidden [ControlResult] CheckOrphanedApp([ControlResult] $controlResult) {
         $app = $this.GetResourceObject()
 
-        $owners = [array] (Get-AzureADApplicationOwner -ObjectId $app.ObjectId)
-        if ($owners -eq $null -or $owners.Count -eq 0) {
+        if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 [MessageData]::new("App [$($app.DisplayName)] has no owner configured."));
         }
         else {
             $controlResult.AddMessage([VerificationResult]::Passed,
-                [MessageData]::new("App [$($app.DisplayName)] has an owner configured."));
+                [MessageData]::new("App [$($app.DisplayName)] has atleast one owner configured."));
         }
         return $controlResult;
     }
@@ -194,14 +210,13 @@ class Application: SVTBase {
     hidden [ControlResult] CheckAppFTEOwner([ControlResult] $controlResult) {
         $app = $this.GetResourceObject()
 
-        $owners = [array] (Get-AzureADApplicationOwner -ObjectId $app.ObjectId)
-        if ($owners -eq $null -or $owners.Count -eq 0) {
+        if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 [MessageData]::new("App [$($app.DisplayName)] has no owner configured."));
         }
-        elseif ($owners.Count -gt 0) {
+        elseif ($this.AppOwners.Count -gt 0) {
             $bFTE = $false
-            $owners | % { 
+            $this.AppOwners | % { 
                 #If one of the users is non-Guest (== 'Member'), we are good.
                 if ($_.UserType -ne 'Guest') { $bFTE = $true }
             }
@@ -295,14 +310,13 @@ class Application: SVTBase {
     hidden [ControlResult] CheckAppHasFTEOwnerOnly([ControlResult] $controlResult) {
         $app = $this.GetResourceObject()
 
-        $owners = [array] (Get-AzureADApplicationOwner -ObjectId $app.ObjectId)
-        if ($owners -eq $null -or $owners.Count -eq 0) {
+        if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 [MessageData]::new("App [$($app.DisplayName)] has no owner configured."));
         }
-        elseif ($owners.Count -gt 0) {
+        elseif ($this.AppOwners.Count -gt 0) {
             $guestOwners = @();
-            $owners | % { 
+            $this.AppOwners | % { 
                 if ($_.UserType -eq 'Guest') {
                     $guestOwners += $_.Mail
                 }
@@ -313,10 +327,47 @@ class Application: SVTBase {
             }
             else {
                 $controlResult.AddMessage([VerificationResult]::Passed, "All owners of the app are FTE only.");
-                }
             }
-            return $controlResult;
         }
+
+        return $controlResult;
+    }
+
+    hidden [ControlResult] CheckOrphanedAppDoesNotHaveLongExpirySecrets([ControlResult] $controlResult)
+    {
+        $app = $this.GetResourceObject()
+
+        $clientCredentials = $app.PasswordCredentials
+        if ($null -eq $clientCredentials -or $clientCredentials.Count -eq 0) {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+                [MessageData]::new("App [$($app.DisplayName)] has no secrets configured."));
+        }
+        else {
+            $secretsWithLongExpiry = $this.GetExpiredSecrets($clientCredentials);
+
+            if ($secretsWithLongExpiry.Count -gt 0) {
+                if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0)
+                {
+                    $controlResult.AddMessage([VerificationResult]::Failed,
+                    [MessageData]::new("One or more secrets of the orphaned app [$($app.DisplayName)] have long expiry (>90 days). Please review them below: "));
+                    $controlResult.AddMessage(($secretsWithLongExpiry | Format-Table -AutoSize | Out-String -Width 512));
+                    $controlResult.DetailedResult = ConvertTo-Json $secretsWithLongExpiry -Depth 3;
+                }
+                else 
+                {
+                    $controlResult.AddMessage([VerificationResult]::Verify,
+                    [MessageData]::new("One or more secrets of the app [$($app.DisplayName)] have long expiry (>90 days). Owners should review the secrets."));             
+                }
+                
+            }
+            else {
+                $controlResult.AddMessage([VerificationResult]::Passed,
+                    [MessageData]::new("All secrets of app [$($app.DisplayName)] have short expiry (<=90 days)."));                
+            }
+        }
+
+        return $controlResult;
+    }
     
     hidden [ControlResult] CheckAppDoesNotHaveLongExpirySecrets([ControlResult] $controlResult) {
         $app = $this.GetResourceObject()
@@ -327,21 +378,13 @@ class Application: SVTBase {
                 [MessageData]::new("App [$($app.DisplayName)] has no secrets configured."));
         }
         else {
-            $expiredSecrets = [System.Collections.ArrayList]::new();
-            foreach ($clientCredential in $clientCredentials) { 
-                if ($clientCredential.EndDate -gt ([datetime]::UtcNow).AddDays($this.ControlSettings.Application.CredentialExpiryThresholdInDays)) {
-                    $expiredSecrets.Add([PSCustomObject]@{
-                            ExpiryInDays = ($clientCredential.EndDate - [datetime]::UtcNow).Days
-                            SecretId     = $clientCredential.KeyId
-                        })
-                }
-            }
+            $secretsWithLongExpiry = $this.GetExpiredSecrets($clientCredentials);
 
-            if ($expiredSecrets.Count -gt 0) {
+            if ($secretsWithLongExpiry.Count -gt 0) {
                 $controlResult.AddMessage([VerificationResult]::Failed,
-                    [MessageData]::new("One or more secrets of app [$($app.DisplayName)] have long expiry (>90 days). Please review them below"));
-                $controlResult.AddMessage(($expiredSecrets | Format-Table -AutoSize | Out-String -Width 512));
-                $controlResult.DetailedResult = ConvertTo-Json $expiredSecrets -Depth 3;
+                    [MessageData]::new("One or more secrets of app [$($app.DisplayName)] have long expiry (>90 days). Please review them below: "));
+                $controlResult.AddMessage(($secretsWithLongExpiry | Format-Table -AutoSize | Out-String -Width 512));
+                $controlResult.DetailedResult = ConvertTo-Json $secretsWithLongExpiry -Depth 3;
             }
             else {
                 $controlResult.AddMessage([VerificationResult]::Passed,

@@ -264,6 +264,23 @@
         "RBAC"
       ],
       "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthN_Do_Not_Allow_Long_Expiry_Secrets_For_Orphaned_Apps",
+      "Description": "App Registrations with no owners should not have long expiry secrets.",
+      "Id": "App260",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckOrphanedAppDoesNotHaveLongExpirySecrets",
+      "Rationale": "Apps without any ownership can either be legacy apps no longer being used or app whose owners have left the organization. If client secrets with secret expiry of more than 90 days are associated this could lead to a longer attack window of app compromise outside the enterprise. Ensuring enterprise security hygiene, either the app or the secret should be deleted and proper ownership should be defined.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to certificates and secrets and delete any client secrets with expiry more than 90 days. 4. Either delete the app or provide ownership to the apps.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthN"
+      ],
+      "Enabled": true
     }
   ]
 }
