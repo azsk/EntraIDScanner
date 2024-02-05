@@ -3,6 +3,8 @@ class ServicePrincipal: SVTBase
 {    
     hidden [PSObject] $ResourceObject;
     hidden [String] $SPNName;
+    hidden [psobject] $RiskyPermissions;
+
     ServicePrincipal([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
         #$this.GetResourceObject();
@@ -10,7 +12,7 @@ class ServicePrincipal: SVTBase
 
         $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
         $this.SPNName = $this.ResourceObject.DisplayName
-        
+        $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAD.RiskyPermissions.json', $true);
     }
 
     hidden [PSObject] GetResourceObject()
@@ -98,6 +100,16 @@ class ServicePrincipal: SVTBase
                                             [MessageData]::new("None of the configured keys for SPN [$($spn.DisplayName)] are nearing expiry (<$expireDays days)."));
             }
         }
+        return $controlResult;
+    }
+
+    hidden [ControlResult] CheckEnterpriseAppUsesMiniminalPermissions([ControlResult] $controlResult)
+    {
+        $spn = $this.GetResourceObject();
+        $appRoleAssignmentGroups = (Get-AzureADServicePrincipalAppRoleAssignment -ObjectId $spn.ObjectId) | Group-Object -Property ResourceId
+        $appRoleOauth2PermissionGrants = (Get-AzureADServicePrincipalOauth2PermissionGrant -ObjectId $spn.ObjectId) | Group-Object -Property ResourceId
+        
+       
         return $controlResult;
     }
 
