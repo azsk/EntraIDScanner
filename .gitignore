@@ -199,3 +199,4 @@ ModelManifest.xml
 /src/AzSK.Debug
 /src/AzSK/AzSK.sln
 /.vscode/launch.json
+*.local.ps1

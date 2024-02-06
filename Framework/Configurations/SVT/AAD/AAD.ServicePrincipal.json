@@ -73,6 +73,42 @@
           "Enabled": true
         },
         {
+          "ControlID": "EntraID_EnterpriseApplication_AuthZ_Minimize_Permissions_Granted",
+          "Description": "Enterprise (line of business) apps should be granted the least permissions needed to various resources",
+          "Id": "SPN150",
+          "ControlSeverity": "High",
+          "Automated": "Yes",
+          "MethodName": "CheckEnterpriseAppUsesMiniminalPermissions",
+          "Rationale": "Apps should only be granted the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
+          "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to API permissions and remove any risky permissions.",
+          "Tags": [
+            "SDL",
+            "TCP",
+            "Automated",
+            "AuthZ",
+            "RBAC"
+          ],
+          "Enabled": true
+        },
+        {
+          "ControlID": "EntraID_EnterpriseApplication_AuthZ_Minimize_Permissions_Granted_To_Multitenant_Apps",
+          "Description": "Enterprise (line of business) apps should be granted the least permissions needed to various resources",
+          "Id": "SPN160",
+          "ControlSeverity": "High",
+          "Automated": "Yes",
+          "MethodName": "CheckEnterpriseMultiTenantAppUsesMiniminalPermissions",
+          "Rationale": "Apps should only be granted the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
+          "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to API permissions and remove any risky permissions.",
+          "Tags": [
+            "SDL",
+            "TCP",
+            "Automated",
+            "AuthZ",
+            "RBAC"
+          ],
+          "Enabled": true
+        },
+        {
           "ControlID": "EntraID_EnterpriseApplication_AuthN_Do_Not_Use_Credentials",
           "Description": "Enterprise application should not use credentials.",
           "Id": "SPN170",
