@@ -107,6 +107,23 @@
             "RBAC"
           ],
           "Enabled": true
+        },
+        {
+          "ControlID": "EntraID_EnterpriseApplication_AuthN_Do_Not_Use_Credentials",
+          "Description": "Enterprise application should not use credentials.",
+          "Id": "SPN170",
+          "ControlSeverity": "High",
+          "Automated": "Yes",
+          "MethodName": "CheckEnterpiseApplicationDoesNotUsePasswordCredentials",
+          "Rationale": "Password credentials tend to be easier to compromise via various attacks. They are also symmetric leading to attack vectors on both ends of the flow.",
+          "Recommendation": "Refer: TODO",
+          "Tags": [
+            "SDL",
+            "TCP",
+            "Automated",
+            "AuthN"
+          ],
+          "Enabled": true
         }
   ]
 }
