@@ -281,6 +281,23 @@
         "AuthN"
       ],
       "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_AppRegistration_AuthZ_Enable_App_Instance_Lock",
+      "Description": "Multi-tenant apps should have app instance lock enabled on all properties.",
+      "Id": "App270",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckAppInstanceLock",
+      "Rationale": "App instance property lock prevents owners of Enterprise Applications in other tenants from creating credentials of the SPN. The credentials can allow misuse of SPNs to gain unauthorized access to critical Enterprise data.",
+      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Enable app instance property lock.",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthZ"
+      ],
+      "Enabled": true
     }
   ]
 }

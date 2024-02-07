@@ -438,4 +438,39 @@ class AppRegistration: SVTBase {
 
         return $controlResult;
     }
+
+    hidden [ControlResult] CheckAppInstanceLock([ControlResult] $controlResult) {
+        $app = $this.GetResourceObject();
+        if ( ($app.AvailableToOtherTenants -eq $true) -or
+        (-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg"))
+        {
+            try
+            {
+                $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $this.ResourceObject.AppId)
+                if($null -ne $appAPIObj.servicePrincipalLockConfiguration -and $appAPIObj.servicePrincipalLockConfiguration.isEnabled -and $appAPIObj.servicePrincipalLockConfiguration.allProperties)
+                {
+                    $controlResult.AddMessage([VerificationResult]::Passed,
+                    [MessageData]::new("App instance lock property has been enabled for all properties."));    
+                }
+                else
+                {
+                    $controlResult.AddMessage([VerificationResult]::Failed,
+                    [MessageData]::new("App instance lock property has not been enabled for one or more propertie(s)."));
+                }
+            }
+            catch
+            {
+                $controlResult.AddMessage([VerificationResult]::Error,
+                [MessageData]::new("Could not determine app instance lock property of app [$($app.DisplayName)]."));
+            }
+
+        }
+        else
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+            [MessageData]::new("App [$($app.DisplayName)] is limited to current enterprise tenant."));
+        }
+
+        return $controlResult;
+    }
 }

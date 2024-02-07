@@ -40,6 +40,7 @@ class AccountHelper {
     static hidden [PSObject] $currentAzContext;
     static hidden [PSObject] $currentRMContext;
     static hidden [PSObject] $AADAPIAccessToken;
+    static hidden [PSObject] $GraphAccessToken;
 
 	#TODO: 'static' => most of these will get set for session! (Also statics in [Tenant] class)
 	#TODO: May need to consider situations where user runs for 2 diff tenants in same session...
@@ -113,6 +114,32 @@ class AccountHelper {
         [AccountHelper]::rolesLoaded = $false;    
     }
     
+    hidden static [PSObject] GetGraphToken()
+    {
+        if(-not [AccountHelper]::GraphAccessToken)
+        {
+            $apiToken = $null
+            $azContext = $null
+
+            try {
+                #Either throws or returns non-null
+                $azContext = [AccountHelper]::GetCurrentAzContext()
+                if($null -ne $azContext)
+                {
+                    $apiToken = (Get-AzAccessToken -ResourceTypeName MSGraph).Token
+                }  
+            }
+            catch {
+                throw ([SuppressedException]::new("Could not acquire graph token for the user.`r`n$_", [SuppressedExceptionType]::Generic))
+            }
+
+            [AccountHelper]::GraphAccessToken = $apiToken
+        }
+
+        return [AccountHelper]::GraphAccessToken        
+
+    }
+
     # Can be called with $null (when tenantId is not specified by the user)
     hidden static [PSObject] GetCurrentAzContext($desiredTenantId)
     {
