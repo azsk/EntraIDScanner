@@ -1,5 +1,5 @@
 Set-StrictMode -Version Latest 
-class Application: SVTBase {    
+class AppRegistration: SVTBase {    
     hidden [PSObject] $ResourceObject;
 
     hidden [hashtable] $DNSCache = @{};
@@ -8,7 +8,7 @@ class Application: SVTBase {
     hidden [PsObject] $RiskyPermissions;
     hidden [PSObject] $AppOwners;
 
-    Application([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) {
+    AppRegistration([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) {
 
         $objId = $svtResource.ResourceId
         $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId

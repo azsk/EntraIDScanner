@@ -1,5 +1,5 @@
 Set-StrictMode -Version Latest
-function Get-AzSKAADSecurityStatusTenant
+function Get-AzSKEntraIDSecurityStatusTenant
 {
 	<#
 	.SYNOPSIS
@@ -34,7 +34,7 @@ function Get-AzSKAADSecurityStatusTenant
 		[Parameter(Position = 1, Mandatory = $false, HelpMessage="Comma separated list of object types to scan [Application, ServicePrincipal, Group, User, Device, All (default)].")]
 		[ValidateNotNullOrEmpty()]
 		[Alias("otp")]
-		[ValidateSet("All","Application", "Device", "Group", "ServicePrincipal", "User", "None")]
+		[ValidateSet("All","AppRegistration", "Device", "Group", "EnterpriseApplication", "User", "None")]
 		$ObjectTypes = @("All"),
 
 		[int]
@@ -81,7 +81,7 @@ function Get-AzSKAADSecurityStatusTenant
 
 
 
-function Get-AzSKAADSecurityStatusUser
+function Get-AzSKEntraIDSecurityStatusUser
 {
 	<#
 	.SYNOPSIS
@@ -115,7 +115,7 @@ function Get-AzSKAADSecurityStatusUser
 		[Parameter(Position = 1, Mandatory = $false, HelpMessage="Comma separated list of object types to scan [Application, ServicePrincipal, Group, User, Device, All (default)].")]
 		[ValidateNotNullOrEmpty()]
 		[Alias("otp")]
-		[ValidateSet("All","Application", "Device", "Group", "ServicePrincipal", "User", "None")]
+		[ValidateSet("All","AppRegistration", "Device", "Group", "EnterpriseApplication", "User", "None")]
 		$ObjectTypes = @("All"),		
 
 		[int]

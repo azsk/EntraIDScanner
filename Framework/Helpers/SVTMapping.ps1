@@ -325,15 +325,15 @@ class SVTMapping
 			ResourceTypeName = "Tenant";
         },
 		[ResourceTypeMapping]@{
-            ResourceType = "AAD.Application";
-            ClassName = "Application";
-            JsonFileName = "AAD.Application.json";
+            ResourceType = "AAD.AppRegistration";
+            ClassName = "AppRegistration";
+            JsonFileName = "AAD.AppRegistration.json";
             ResourceTypeName = "App";            
         },
         [ResourceTypeMapping]@{
-            ResourceType = "AAD.ServicePrincipal";
-			ClassName = "ServicePrincipal";
-			JsonFileName = "AAD.ServicePrincipal.json";
+            ResourceType = "AAD.EnterpriseApplication";
+			ClassName = "EnterpriseApplication";
+			JsonFileName = "AAD.EnterpriseApplication.json";
 			ResourceTypeName = "SPN";
         },
         [ResourceTypeMapping]@{

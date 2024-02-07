@@ -15,6 +15,7 @@ build/
 bld/
 [Bb]in/
 [Oo]bj/
+PSGetModuleInfo.xml
 
 # Roslyn cache directories
 *.ide/
@@ -199,3 +200,5 @@ ModelManifest.xml
 /src/AzSK.Debug
 /src/AzSK/AzSK.sln
 /.vscode/launch.json
+*.local.ps1
+PSGetModuleInfo.xml

@@ -4,7 +4,7 @@
     "IsMaintenanceMode":  false,
   "Controls": [
     {
-      "ControlID": "AAD_Tenant_RBAC_Grant_Limited_Access_To_Guests",
+      "ControlID": "EntraID_Tenant_RBAC_Grant_Limited_Access_To_Guests",
       "Description": "Guests must not be granted full access to the directory",
       "Id": "Tenant110",
       "ControlSeverity": "High",
@@ -18,10 +18,10 @@
         "Automated",
         "RBAC"
       ],
-      "Enabled": true
+      "Enabled": false
     },
     {
-      "ControlID": "AAD_Tenant_RBAC_Dont_Permit_Guests_To_Invite_Guests",
+      "ControlID": "EntraID_Tenant_RBAC_Dont_Permit_Guests_To_Invite_Guests",
       "Description": "Guests must not be allowed to invite other guests",
       "Id": "Tenant111",
       "ControlSeverity": "High",
@@ -35,10 +35,10 @@
         "Automated",
         "RBAC"
       ],
-      "Enabled": true
+      "Enabled": false
     },
     {
-        "ControlID": "AAD_Tenant_MFA_Required_For_Admins",
+        "ControlID": "EntraID_Tenant_MFA_Required_For_Admins",
         "Description": "Admins must use baseline MFA policy",
         "Id": "Tenant120",
         "ControlSeverity": "High",
@@ -52,10 +52,10 @@
           "Automated",
           "AuthN"
         ],
-        "Enabled": true
+        "Enabled": false
       },
       {
-          "ControlID": "AAD_Tenant_Apps_Dont_Allow_Users_To_Create_Apps",
+          "ControlID": "EntraID_Tenant_Apps_Dont_Allow_Users_To_Create_Apps",
           "Description": "Do not permit users to create apps in tenant",
           "Id": "Tenant130",
           "ControlSeverity": "High",
@@ -69,10 +69,10 @@
             "Automated",
             "AuthZ"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_RBAC_Dont_Allow_Users_To_Invite_Guests",
+          "ControlID": "EntraID_Tenant_RBAC_Dont_Allow_Users_To_Invite_Guests",
           "Description": "Do not permit users to invite guests to the tenant",
           "Id": "Tenant140",
           "ControlSeverity": "High",
@@ -86,10 +86,10 @@
             "Automated",
             "AuthZ"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_SSPR_Require_Min_Questions_To_Reset",
+          "ControlID": "EntraID_Tenant_SSPR_Require_Min_Questions_To_Reset",
           "Description": "At least 3 questions should be required for password reset",
           "Id": "Tenant150",
           "ControlSeverity": "Medium",
@@ -104,10 +104,10 @@
             "AuthN",
             "SSPR"
           ],
-          "Enabled": true
+          "Enabled": false
         },   
         {
-          "ControlID": "AAD_Tenant_SSPR_Enable_User_Notification_On_Password_Reset",
+          "ControlID": "EntraID_Tenant_SSPR_Enable_User_Notification_On_Password_Reset",
           "Description": "Users must be notified upon password reset",
           "Id": "Tenant160",
           "ControlSeverity": "Medium",
@@ -122,10 +122,10 @@
             "AuthN",
             "SSPR"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_SSPR_Enable_Admin_Notify_On_Admin_Password_Reset",
+          "ControlID": "EntraID_Tenant_SSPR_Enable_Admin_Notify_On_Admin_Password_Reset",
           "Description": "All admins must be notified upon any admin password reset",
           "Id": "Tenant170",
           "ControlSeverity": "High",
@@ -140,10 +140,10 @@
             "AuthN",
             "SSPR"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_Misc_Set_Security_Contact_Info",
+          "ControlID": "EntraID_Tenant_Misc_Set_Security_Contact_Info",
           "Description": "Security compliance notification phone and email must be set",
           "Id": "Tenant180",
           "ControlSeverity": "Medium",
@@ -157,10 +157,10 @@
             "Automated",
             "RBAC"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_Device_Require_MFA_For_Join",
+          "ControlID": "EntraID_Tenant_Device_Require_MFA_For_Join",
           "Description": "Enable 'require MFA' for joining devices to tenant",
           "Id": "Tenant190",
           "ControlSeverity": "Medium",
@@ -175,10 +175,10 @@
             "AuthZ",
             "RBAC"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_Device_Set_Max_Per_User_Limit",
+          "ControlID": "EntraID_Tenant_Device_Set_Max_Per_User_Limit",
           "Description": "Set a max device limit for users in the tenant",
           "Id": "Tenant200",
           "ControlSeverity": "Medium",
@@ -193,10 +193,10 @@
             "AuthZ",
             "RBAC"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_MFA_Review_Bypassed_Users",
+          "ControlID": "EntraID_Tenant_MFA_Review_Bypassed_Users",
           "Description": "Review list of current 'MFA-bypassed' users in the tenant",
           "Id": "Tenant180",
           "ControlSeverity": "High",
@@ -210,10 +210,10 @@
             "Automated",
             "AuthN"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_MFA_Allow_Users_To_Notify_About_Fraud",
+          "ControlID": "EntraID_Tenant_MFA_Allow_Users_To_Notify_About_Fraud",
           "Description": "Allow users to send notifications about possible fraud",
           "Id": "Tenant190",
           "ControlSeverity": "Medium",
@@ -227,10 +227,10 @@
             "Automated",
             "AuthN"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_SSPR_Require_Min_AuthN_Methods",
+          "ControlID": "EntraID_Tenant_SSPR_Require_Min_AuthN_Methods",
           "Description": "Require at least two authentication methods for password reset",
           "Id": "Tenant200",
           "ControlSeverity": "High",
@@ -245,10 +245,10 @@
             "AuthN",
             "SSPR"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_Apps_Regulate_Data_Access_Approval",
+          "ControlID": "EntraID_Tenant_Apps_Regulate_Data_Access_Approval",
           "Description": "Do not allow users to approve tenant data access for external apps",
           "Id": "Tenant210",
           "ControlSeverity": "High",
@@ -262,10 +262,10 @@
             "Automated",
             "AuthZ"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_RBAC_Keep_Min_Global_Admins",
+          "ControlID": "EntraID_Tenant_RBAC_Keep_Min_Global_Admins",
           "Description": "Include at least three members in global admin role",
           "Id": "Tenant220",
           "ControlSeverity": "High",
@@ -279,10 +279,10 @@
             "Automated",
             "AuthZ"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_RBAC_Dont_Have_Guests_As_Global_Admins",
+          "ControlID": "EntraID_Tenant_RBAC_Dont_Have_Guests_As_Global_Admins",
           "Description": "Guest users must not be made members of global admin role",
           "Id": "Tenant230",
           "ControlSeverity": "High",
@@ -296,10 +296,10 @@
             "Automated",
             "AuthN"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_AuthN_Use_Custom_Banned_Passwords",
+          "ControlID": "EntraID_Tenant_AuthN_Use_Custom_Banned_Passwords",
           "Description": "Ensure that custom banned passwords list is configured for use",
           "Id": "Tenant240",
           "ControlSeverity": "Medium",
@@ -313,10 +313,10 @@
             "Automated",
             "AuthN"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_AuthN_Enforce_Banned_Passwords_OnPrem",
+          "ControlID": "EntraID_Tenant_AuthN_Enforce_Banned_Passwords_OnPrem",
           "Description": "Ensure that banned password check is enabled on-prem and set to 'Enforce' level",
           "Id": "Tenant250",
           "ControlSeverity": "Medium",
@@ -330,10 +330,10 @@
             "Automated",
             "AuthN"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_Privacy_Configure_Valid_Privacy_Contact",
+          "ControlID": "EntraID_Tenant_Privacy_Configure_Valid_Privacy_Contact",
           "Description": "Ensure that tenant-wide privacy contact email is set to a valid (current) non-guest user",
           "Id": "Tenant260",
           "ControlSeverity": "High",
@@ -347,10 +347,10 @@
             "Automated",
             "Privacy"
           ],
-          "Enabled": true
+          "Enabled": false
         },
         {
-          "ControlID": "AAD_Tenant_Privacy_Configure_Valid_Privacy_Statement",
+          "ControlID": "EntraID_Tenant_Privacy_Configure_Valid_Privacy_Statement",
           "Description": "Ensure that a privacy statement is configured and points to a valid URL",
           "Id": "Tenant270",
           "ControlSeverity": "High",
@@ -364,7 +364,7 @@
             "Automated",
             "Privacy"
           ],
-          "Enabled": true
+          "Enabled": false
         }
       ]
     }

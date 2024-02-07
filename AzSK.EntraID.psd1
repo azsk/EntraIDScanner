@@ -9,7 +9,7 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule             = '.\AzSK.AAD.psm1'
+    RootModule             = '.\AzSK.EntraID.psm1'
 
     # Version number of this module.
     ModuleVersion          = '0.9.1'
@@ -27,7 +27,7 @@
     Copyright              = '(c) 2019 Microsoft Corporation. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description            = 'Security Checks for Azure Active Directory (Preview)'
+    Description            = 'Security Checks for Entra ID (Preview)'
 
     # Minimum version of the Windows PowerShell engine required by this module
     PowerShellVersion      = '5.0'
@@ -70,7 +70,7 @@
   
     # Functions to export from this module
     FunctionsToExport      = @(
-        'Get-AzSKAADSecurityStatusTenant', 'Get-AzSKAADSecurityStatusUser', 'Set-AzSKMonitoringSettings', 
+        'Get-AzSKEntraIDSecurityStatusTenant', 'Get-AzSKEntraIDSecurityStatusUser', 'Set-AzSKMonitoringSettings', 
         'Set-AzSKLocalAIOrgTelemetrySettings', 'Set-AzSKUsageTelemetryLevel' 
     )
 
