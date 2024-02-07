@@ -328,6 +328,24 @@ Content-Type: multipart/mixed; boundary={1}
 
         return $outputValues;
 	}
+
+	hidden static [PSObject] InvokeGraphAPI($url)
+	{
+		$apiToken = [AccountHelper]::GetGraphToken()
+        $headers = @{
+            "Authorization" = "Bearer $($apiToken)"}
+
+        $response = $null
+
+        try {
+            $response = Invoke-RestMethod $url -Headers $headers -Method GET
+        }
+        catch {
+			throw $_;
+        }
+		
+        return $response
+	}
 	
     hidden static [PSObject] InvokeAADAPI($methodUrl)
     { 
