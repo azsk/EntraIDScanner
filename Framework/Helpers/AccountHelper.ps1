@@ -245,7 +245,7 @@ class AccountHelper {
             [AccountHelper]::ScanType = [CommandType]::AAD
             [AccountHelper]::currentAADContext = $aadContext
             [AccountHelper]::currentAADUserObject = $aadUserObj
-            [AccountHelper]::tenantInfoMsg = "AAD Tenant Info: `n`tDomain: $($aadContext.TenantDomain)`n`tTenanId: $($aadContext.TenantId)"
+            [AccountHelper]::tenantInfoMsg = "Entra ID Tenant Info: `n`tDomain: $($aadContext.TenantDomain)`n`tTenanId: $($aadContext.TenantId)"
         }
 
         return [AccountHelper]::currentAADContext
