@@ -1,9 +1,9 @@
 Set-StrictMode -Version Latest 
-class ServicePrincipal: SVTBase
+class EnterpriseApplication: SVTBase
 {    
     hidden [PSObject] $ResourceObject;
     hidden [String] $SPNName;
-    ServicePrincipal([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
+    EnterpriseApplication([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
         #$this.GetResourceObject();
         $objId = $svtResource.ResourceId

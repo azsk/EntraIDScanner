@@ -9,7 +9,7 @@ class AADResourceResolver: Resolver
     [bool] $scanTenant;
     [int] $MaxObjectsToScan;
     [string[]] $ObjectTypesToScan;
-    hidden static [string[]] $AllTypes = @("Application", "Device", "Group", "ServicePrincipal", "User");
+    hidden static [string[]] $AllTypes = @("AppRegistration", "Device", "Group", "EnterpriseApplication", "User");
     AADResourceResolver([string]$tenantId, [bool] $bScanTenant): Base($tenantId)
 	{
         if ([string]::IsNullOrEmpty($tenantId))
@@ -91,7 +91,7 @@ class AADResourceResolver: Resolver
 
         $maxObj = $this.MaxObjectsToScan
 
-        if ($this.NeedToScanType("Application"))
+        if ($this.NeedToScanType("AppRegistration"))
         {
             $appObjects = @()
             if ($this.scanTenant)
@@ -103,7 +103,7 @@ class AADResourceResolver: Resolver
             }
 
             $appTypeMapping = ([SVTMapping]::AADResourceMapping |
-                Where-Object { $_.ResourceType -eq 'AAD.Application' } |
+                Where-Object { $_.ResourceType -eq 'AAD.AppRegistration' } |
                 Select-Object -First 1)
 
             #TODO: Set to 3 for preview release. A user can use a larger value if they want via the 'MaxObj' cmdlet param.
@@ -115,7 +115,7 @@ class AADResourceResolver: Resolver
                 $svtResource.ResourceName = $obj.DisplayName;
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file. 
                 #TODO: If rgName == "" then all LOGs end up in root folder alongside CSV, README.txt. May need to have a reasonable 'mock' RGName.
-                $svtResource.ResourceType = "AAD.Application";
+                $svtResource.ResourceType = "AAD.AppRegistration";
                 $svtResource.ResourceId = $obj.ObjectId     
                 $svtResource.ResourceTypeMapping = $appTypeMapping   
                 $this.SVTResources +=$svtResource
@@ -123,7 +123,7 @@ class AADResourceResolver: Resolver
             }        
         }
 
-        if ($this.NeedToScanType("ServicePrincipal"))
+        if ($this.NeedToScanType("EnterpriseApplication"))
         {
             $spnObjects = @()
             if ($this.scanTenant)
@@ -135,7 +135,7 @@ class AADResourceResolver: Resolver
             }
             
             $spnTypeMapping = ([SVTMapping]::AADResourceMapping |
-                Where-Object { $_.ResourceType -eq 'AAD.ServicePrincipal' } |
+                Where-Object { $_.ResourceType -eq 'AAD.EnterpriseApplication' } |
                 Select-Object -First 1)
 
             $nObj = $maxObj
@@ -143,7 +143,7 @@ class AADResourceResolver: Resolver
                 $svtResource = [SVTResource]::new();
                 $svtResource.ResourceName = $obj.DisplayName;
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file.
-                $svtResource.ResourceType = "AAD.ServicePrincipal";
+                $svtResource.ResourceType = "AAD.EnterpriseApplication";
                 $svtResource.ResourceId = $obj.ObjectId     
                 $svtResource.ResourceTypeMapping = $spnTypeMapping   
                 $this.SVTResources +=$svtResource
