@@ -78,7 +78,7 @@ function Get-AzSKEntraIDSecurityStatusTenant
 					$returnValue = $secStatus.EvaluateControlStatus();
 				}
 				$totalResourcesScanned += $resolver.SVTResourcesFoundCount;
-			} While($resolver.SVTResourcesFoundCount -gt 0 -and $resolver.ShouldBatchScan -and $totalResourcesScanned -lt $MaxObj); 
+			} While($resolver.SVTResourcesFoundCount -gt 0 -and $resolver.ShouldBatchScan -and ($MaxObj -le 0 -or $totalResourcesScanned -lt $MaxObj)); 
 			return $evaluationResult;
 		}
 		catch 
