@@ -331,7 +331,7 @@ Content-Type: multipart/mixed; boundary={1}
 
 	hidden static [PSObject] InvokeGraphAPI($url)
 	{
-		$apiToken = [AccountHelper]::GetGraphToken()
+		$apiToken = [AccountHelper]::GetGraphToken().Token
         $headers = @{
             "Authorization" = "Bearer $($apiToken)"}
 
