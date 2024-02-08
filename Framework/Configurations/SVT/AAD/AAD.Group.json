@@ -4,7 +4,7 @@
     "IsMaintenanceMode":  false,
   "Controls": [
     {
-      "ControlID": "EntraID_Group_Use_Security_Enabled",
+      "ControlID": "AAD_Group_Use_Security_Enabled",
       "Description": "All AAD groups must be security enabled (TBD)",
       "Id": "Group110",
       "ControlSeverity": "High",
@@ -22,7 +22,7 @@
       "Enabled": false
     },
     {
-      "ControlID": "EntraID_Group_Require_FTE_Owner",
+      "ControlID": "AAD_Group_Require_FTE_Owner",
       "Description": "Group must have at least one non-guest (native) owner",
       "Id": "Group120",
       "ControlSeverity": "Medium",

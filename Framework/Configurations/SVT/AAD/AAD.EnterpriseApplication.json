@@ -4,7 +4,7 @@
     "IsMaintenanceMode":  false,
     "Controls": [
         {
-          "ControlID": "EntraID_EnterpriseApplication_Use_Cert_Credentials",
+          "ControlID": "AAD_EnterpriseApplication_Use_Cert_Credentials",
           "Description": "SPNs must not use password creds - use cert creds instead",
           "Id": "SPN110",
           "ControlSeverity": "High",
@@ -21,7 +21,7 @@
           "Enabled": false
         },
         {
-          "ControlID": "EntraID_EnterpriseApplication_Review_Legacy_SPN",
+          "ControlID": "AAD_EnterpriseApplication_Review_Legacy_SPN",
           "Description": "SPNs of type legacy should be carefully reviewed",
           "Id": "SPN120",
           "ControlSeverity": "High",
@@ -38,7 +38,7 @@
           "Enabled": false
         },
         {
-          "ControlID": "EntraID_EnterpriseApplication_Check_Key_Expiry",
+          "ControlID": "AAD_EnterpriseApplication_Check_Key_Expiry",
           "Description": "SPN key credentials should be renewed before expiry",
           "Id": "SPN130",
           "ControlSeverity": "High",
@@ -55,7 +55,7 @@
           "Enabled": false
         },
         {
-          "ControlID": "EntraID_EnterpriseApplication_AuthZ_Add_FTE_Owners_Only",
+          "ControlID": "AAD_EnterpriseApplication_AuthZ_Add_FTE_Owners_Only",
           "Description": "All owners of the enterprise application should be FTE only.",
           "Id": "SPN140",
           "ControlSeverity": "High",
@@ -73,7 +73,7 @@
           "Enabled": true
         },
         {
-          "ControlID": "EntraID_EnterpriseApplication_AuthZ_Minimize_Permissions_Granted",
+          "ControlID": "AAD_EnterpriseApplication_AuthZ_Minimize_Permissions_Granted",
           "Description": "Enterprise (line of business) apps should be granted the least permissions needed to various resources",
           "Id": "SPN150",
           "ControlSeverity": "High",
@@ -91,7 +91,7 @@
           "Enabled": true
         },
         {
-          "ControlID": "EntraID_EnterpriseApplication_AuthZ_Minimize_Permissions_Granted_To_Multitenant_Apps",
+          "ControlID": "AAD_EnterpriseApplication_AuthZ_Minimize_Permissions_Granted_To_Multitenant_Apps",
           "Description": "Enterprise (line of business) apps should be granted the least permissions needed to various resources",
           "Id": "SPN160",
           "ControlSeverity": "High",
@@ -109,7 +109,7 @@
           "Enabled": true
         },
         {
-          "ControlID": "EntraID_EnterpriseApplication_AuthN_Do_Not_Use_Credentials",
+          "ControlID": "AAD_EnterpriseApplication_AuthN_Do_Not_Use_Credentials",
           "Description": "Enterprise application should not use credentials.",
           "Id": "SPN170",
           "ControlSeverity": "High",

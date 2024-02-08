@@ -4,7 +4,7 @@
     "IsMaintenanceMode":  false,
   "Controls": [
     {
-      "ControlID": "EntraID_Device_Review_Stale_Devices",
+      "ControlID": "AAD_Device_Review_Stale_Devices",
       "Description": "Review and remove stale devices from the directory",
       "Id": "Device110",
       "ControlSeverity": "Medium",
