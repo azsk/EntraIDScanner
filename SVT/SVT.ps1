@@ -61,11 +61,18 @@ function Get-AzSKEntraIDSecurityStatusTenant
 				$TenantId = $resolver.TenantId 
 			}
 
-			$secStatus = [ServicesSecurityStatus]::new($TenantId, $PSCmdlet.MyInvocation, $resolver);
-			if ($secStatus) 
-			{		
-				return $secStatus.EvaluateControlStatus();
-			}    
+			$evaluationResult = $Null;
+			Do
+			{
+				$secStatus = [ServicesSecurityStatus]::new($TenantId, $PSCmdlet.MyInvocation, $resolver);
+
+				if ($secStatus) 
+				{	
+						
+					$returnValue = $secStatus.EvaluateControlStatus();
+				}
+			} While($resolver.SVTResourcesFoundCount -gt 0) 
+			return $evaluationResult;
 		}
 		catch 
 		{
