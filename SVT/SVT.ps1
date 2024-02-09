@@ -38,9 +38,14 @@ function Get-AzSKEntraIDSecurityStatusTenant
 		$ObjectTypes = @("All"),
 
 		[int]
-		[Parameter(Position = 2, Mandatory = $false, HelpMessage="Max # of objects to check. Default is 3 (for preview release).")]
+		[Parameter(Position = 2, Mandatory = $false, HelpMessage="Max # of objects to check. Default is 10. When using batching set this to -1 to indicate no limit.")]
 		[Alias("mo")]
-		$MaxObj = 3
+		$MaxObj = 0,
+
+		[switch]
+		[Parameter(Mandatory = $false, HelpMessage = "Include detailed results in the CSV")]
+		[Alias("idr")]
+		$IncludeDetailedResult
 	)
 	Begin
 	{
@@ -53,7 +58,7 @@ function Get-AzSKEntraIDSecurityStatusTenant
 	try 
 		{
 			$resolver = [AADResourceResolver]::new($TenantId, $true); #pass $true to scan tenant
-			$resolver.SetScanParameters($ObjectTypes, $MaxObj)
+			$resolver.SetScanParameters($ObjectTypes, $MaxObj);
 
 			#If user didn't pass the tenantId, we set it after getting the login ctx (in the resolver).
 			if ([string]::IsNullOrEmpty($TenantId))
@@ -61,11 +66,20 @@ function Get-AzSKEntraIDSecurityStatusTenant
 				$TenantId = $resolver.TenantId 
 			}
 
-			$secStatus = [ServicesSecurityStatus]::new($TenantId, $PSCmdlet.MyInvocation, $resolver);
-			if ($secStatus) 
-			{		
-				return $secStatus.EvaluateControlStatus();
-			}    
+			$evaluationResult = $Null;
+			$totalResourcesScanned = 0;
+			Do
+			{
+				$resolver.ClearResources();
+				# Do at least one pass for non-batched scans.
+				$secStatus = [ServicesSecurityStatus]::new($TenantId, $PSCmdlet.MyInvocation, $resolver);
+				if ($secStatus) 
+				{	
+					$returnValue = $secStatus.EvaluateControlStatus();
+				}
+				$totalResourcesScanned += $resolver.SVTResourcesFoundCount;
+			} While($resolver.SVTResourcesFoundCount -gt 0 -and $resolver.ShouldBatchScan -and ($MaxObj -le 0 -or $totalResourcesScanned -lt $MaxObj)); 
+			return $evaluationResult;
 		}
 		catch 
 		{
@@ -119,7 +133,7 @@ function Get-AzSKEntraIDSecurityStatusUser
 		$ObjectTypes = @("All"),		
 
 		[int]
-		[Parameter(Position = 1, Mandatory = $false, HelpMessage="Max # of objects to check. Default is 3 (for preview release).")]
+		[Parameter(Position = 1, Mandatory = $false, HelpMessage="Max # of objects to check. Default is 10.")]
 		[Alias("mo")]
 		$MaxObj,
 
@@ -139,7 +153,7 @@ function Get-AzSKEntraIDSecurityStatusUser
 	try 
 		{
 			$resolver = [AADResourceResolver]::new($TenantId, $false); #pass $false to indicate that the scan is for indiv. user
-			$resolver.SetScanParameters($ObjectTypes, $MaxObj)
+			$resolver.SetScanParameters($ObjectTypes, $MaxObj);
 			
 			#If user didn't pass the tenantId, we set it after getting the login ctx (in the resolver).
 			if ([string]::IsNullOrEmpty($TenantId))
