@@ -106,6 +106,7 @@ class AccountHelper {
         [AccountHelper]::currentAzContext = $null;
         [AccountHelper]::currentRMContext = $null;
         [AccountHelper]::AADAPIAccessToken = $null;
+        [AccountHelper]::GraphAccessToken = $null;
         [AccountHelper]::tenantInfoMsg = $null;
 
         [AccountHelper]::currentAADUserObject = $null;
@@ -116,7 +117,7 @@ class AccountHelper {
     
     hidden static [PSObject] GetGraphToken()
     {
-        if(-not [AccountHelper]::GraphAccessToken)
+        if(-not [AccountHelper]::GraphAccessToken -or [AccountHelper]::GraphAccessToken.ExpiresOn.UtcDateTime -le [DateTime]::UtcNow)
         {
             $apiToken = $null
             $azContext = $null
@@ -126,7 +127,7 @@ class AccountHelper {
                 $azContext = [AccountHelper]::GetCurrentAzContext()
                 if($null -ne $azContext)
                 {
-                    $apiToken = (Get-AzAccessToken -ResourceTypeName MSGraph).Token
+                    $apiToken = Get-AzAccessToken -ResourceTypeName MSGraph
                 }  
             }
             catch {

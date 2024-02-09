@@ -34,7 +34,7 @@ function Get-AzSKEntraIDSecurityStatusTenant
 		[Parameter(Position = 1, Mandatory = $false, HelpMessage="Comma separated list of object types to scan [Application, ServicePrincipal, Group, User, Device, All (default)].")]
 		[ValidateNotNullOrEmpty()]
 		[Alias("otp")]
-		[ValidateSet("All","AppRegistration", "Device", "Group", "EnterpriseApplication", "User", "None")]
+		[ValidateSet("All","AppRegistration", "EnterpriseApplication")]
 		$ObjectTypes = @("All"),
 
 		[int]
@@ -129,7 +129,7 @@ function Get-AzSKEntraIDSecurityStatusUser
 		[Parameter(Position = 1, Mandatory = $false, HelpMessage="Comma separated list of object types to scan [Application, ServicePrincipal, Group, User, Device, All (default)].")]
 		[ValidateNotNullOrEmpty()]
 		[Alias("otp")]
-		[ValidateSet("All","AppRegistration", "Device", "Group", "EnterpriseApplication", "User", "None")]
+		[ValidateSet("All","AppRegistration","EnterpriseApplication")]
 		$ObjectTypes = @("All"),		
 
 		[int]
