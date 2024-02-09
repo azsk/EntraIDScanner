@@ -8,8 +8,18 @@ class AADResourceResolver: Resolver
     [int] $SVTResourcesFoundCount=0;
     [bool] $scanTenant;
     [int] $MaxObjectsToScan;
+    [int] $BatchThreshold;
+    [bool] $ShouldBatchScan;
     [string[]] $ObjectTypesToScan;
     hidden static [string[]] $AllTypes = @("AppRegistration", "Device", "Group", "EnterpriseApplication", "User");
+    hidden [PsCustomObject] $BatchCounters = [PSCustomObject]@{
+        App = 0
+        SPN = 0
+        Device = 0
+        Group = 0
+        User = 0
+    }
+
     AADResourceResolver([string]$tenantId, [bool] $bScanTenant): Base($tenantId)
 	{
         if ([string]::IsNullOrEmpty($tenantId))
@@ -21,6 +31,8 @@ class AADResourceResolver: Resolver
             $this.tenantId = $tenantId
         }
         $this.scanTenant = $bScanTenant
+        #TODO: See if we can read this from some settings file.
+        $this.BatchThreshold = 5000;
     }
 
     [void] SetScanParameters([string[]] $objTypesToScan, $maxObj)
@@ -47,11 +59,18 @@ class AADResourceResolver: Resolver
         {
             $this.ObjectTypesToScan = $objTypesToScan
         }
+
+        $this.ShouldBatchScan = ($this.MaxObjectsToScan -le 0 -or $this.MaxObjectsToScan -gt $this.BatchThreshold);
     }
 
     [bool] NeedToScanType([string] $objType)
     {
         return $this.ObjectTypesToScan -contains $objType
+    }
+
+    [void] ClearResources()
+    {
+        $this.SVTResources = @();
     }
 
     [void] LoadResourcesForScan()
@@ -89,14 +108,22 @@ class AADResourceResolver: Resolver
         }
         #TODO Explore delta between 'user-created' v. 'user-owned' for Apps/SPNs
 
-        $maxObj = $this.MaxObjectsToScan
+        $maxObj = $this.MaxObjectsToScan;
 
         if ($this.NeedToScanType("AppRegistration"))
         {
             $appObjects = @()
             if ($this.scanTenant)
             {
-                $appObjects = [array] (Get-AzureADApplication -Top  $maxObj)
+                if ($this.ShouldBatchScan)
+                {
+                    $appObjects = [array] (Get-AzADApplication -First $this.BatchThreshold -Skip $this.BatchCounters.App);
+                    $this.BatchCounters.App += $appObjects.Count;
+                }
+                else
+                {
+                    $appObjects = [array] (Get-AzADApplication -First $maxObj);
+                }
             }
             else {
                 $appObjects = [array] ($userOwnedObjects | ?{$_.ObjectType -eq 'Application'})
@@ -120,7 +147,7 @@ class AADResourceResolver: Resolver
                 $svtResource.ResourceTypeMapping = $appTypeMapping   
                 $this.SVTResources +=$svtResource
                 if (--$nObj -eq 0) { break;} 
-            }        
+            }
         }
 
         if ($this.NeedToScanType("EnterpriseApplication"))
@@ -128,7 +155,15 @@ class AADResourceResolver: Resolver
             $spnObjects = @()
             if ($this.scanTenant)
             {
-                $spnObjects = [array] (Get-AzureADServicePrincipal -Top  $maxObj)
+                if ($this.ShouldBatchScan)
+                {
+                    $spnObjects = [array] (Get-AzADServicePrincipal -First $this.BatchThreshold -Skip $this.BatchCounters.SPN);
+                    $this.BatchCounters.SPN += $spnObjects.Count;
+                }
+                else
+                {
+                    $spnObjects = [array] (Get-AzADServicePrincipal -First $maxObj);
+                }
             }
             else {
                 $spnObjects = [array] ($userOwnedObjects | ?{$_.ObjectType -eq 'ServicePrincipal'})
@@ -156,7 +191,15 @@ class AADResourceResolver: Resolver
             $deviceObjects = @()
             if ($this.scanTenant)
             {
-                $deviceObjects = [array] (Get-AzureADDevice -Top  $maxObj)
+                if ($this.ShouldBatchScan)
+                {
+                    $deviceObjects = [array] (Get-MgDevice -Top  $this.BatchThreshold -Skip $this.BatchCounters.Device);
+                    $this.BatchCounters.Device += $deviceObjects.Count;
+                }
+                else
+                {
+                    $deviceObjects = [array] (Get-MgDevice -Top  $maxObj);
+                }
             }
             else {
                 $DeviceObjects = [array] (Get-AzureADUserOwnedDevice -ObjectId $currUser)
@@ -182,11 +225,18 @@ class AADResourceResolver: Resolver
     
         if ($this.NeedToScanType("User"))
         {
-
             $userObjects = @()
             if ($this.scanTenant)
             {
-                $userObjects = [array] (Get-AzureADUser -Top  $maxObj)
+                if ($this.ShouldBatchScan)
+                {
+                    $userObjects = [array] (Get-AzADUser -First $this.BatchThreshold -Skip $this.BatchCounters.User);
+                    $this.BatchCounters.User += $userObjects.Count;
+                }
+                else
+                {
+                    $userObjects = [array] (Get-AzureADUser -Top $maxObj)
+                }
             }
             else {
                 $userObjects = [array] (Get-AzureADUser -ObjectId $currUser)
@@ -212,12 +262,18 @@ class AADResourceResolver: Resolver
 
         if ($this.NeedToScanType("Group"))
         {
-
-
             $grpObjects = @()
             if ($this.scanTenant)
             {
-                $grpObjects = [array] (Get-AzureADGroup -Top  $maxObj)
+                if ($this.ShouldBatchScan)
+                {
+                    $grpObjects = [array] (Get-AzADGroup -First $this.BatchThreshold -Skip $this.BatchCounters.Group);
+                    $this.BatchCounters.Group += $grpObjects.Count;
+                }
+                else
+                {
+                    $grpObjects = [array] (Get-AzADGroup -First $maxObj)
+                }
             }
             else {
                 $grpObjects = [array] ($userOwnedObjects | ?{$_.ObjectType -eq 'Group'})
