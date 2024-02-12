@@ -52,6 +52,12 @@
             @{ModuleName = 'Az.Accounts'; RequiredVersion = '2.12.1'}
             @{ModuleName = 'Az.Resources'; RequiredVersion = '2.0.1'}
             @{ModuleName = 'AzureAD'; RequiredVersion = '2.0.2.4'}
+            @{ModuleName = 'Microsoft.Graph.Applications'; RequiredVersion = '2.12.0'}
+            @{ModuleName = 'Microsoft.Graph.Users'; RequiredVersion = '2.12.0'}
+            @{ModuleName = 'Microsoft.Graph.Groups'; RequiredVersion = '2.12.0'}
+            @{ModuleName = 'Microsoft.Graph.Identity.DirectoryManagement'; RequiredVersion = '2.12.0'}
+            @{ModuleName = 'Microsoft.Graph.DirectoryObjects'; RequiredVersion = '2.12.0'}
+            @{ModuleName = 'Microsoft.Graph.Authentication'; RequiredVersion = '2.12.0'}
         )
 
     # Assemblies that must be loaded prior to importing this module

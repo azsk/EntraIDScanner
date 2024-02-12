@@ -8,17 +8,17 @@ class AzSKRoot: EventBase
     {   
         [Helpers]::AbstractClass($this, [AzSKRoot]);
         
-		$aadCtx = [AccountHelper]::GetCurrentAADContext($tenantId)	
+		$mgCtx = [AccountHelper]::GetCurrentMgContext($tenantId)	
 		
 		#If the user did not specify a tenantId, we determine it from AAD ctx (from the login session)
 		if ([string]::IsNullOrEmpty($tenantId))
 		{
-			$tenantId = $aadCtx.TenantId
+			$tenantId = $mgCtx.TenantId
 		}
 		$this.TenantContext = [TenantContext] @{
 			TenantId = $tenantId;
 			Scope = "/Organization/$tenantId";
-			TenantName = $aadCtx.TenantDomain;
+			TenantName = $tenantId # TODO: Fix this.
 		};
 	}
 	
@@ -140,6 +140,4 @@ class AzSKRoot: EventBase
 		}
 		return $IsLatestVersionPresent		
 	}
-
-
 }

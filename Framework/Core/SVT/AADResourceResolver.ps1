@@ -24,7 +24,7 @@ class AADResourceResolver: Resolver
 	{
         if ([string]::IsNullOrEmpty($tenantId))
         {
-            $this.tenantId = ([AccountHelper]::GetCurrentAADContext()).TenantId
+            $this.tenantId = ([AccountHelper]::GetCurrentMgContext()).TenantId
         }
         else 
         {
