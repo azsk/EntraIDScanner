@@ -73,6 +73,18 @@ class AADResourceResolver: Resolver
         $this.SVTResources = @();
     }
 
+    [string] ExtractDisplayNameFromResource([PsCustomObject] $resource)
+    {
+        if($this.scanTenant)
+        {
+            return $resource.DisplayName;
+        }
+        else
+        {
+           return $resource.AdditionalProperties["displayName"];
+        }
+    }
+
     [void] LoadResourcesForScan()
 	{
         $tenantInfoMsg = [AccountHelper]::GetCurrentTenantInfo();
@@ -100,10 +112,10 @@ class AADResourceResolver: Resolver
         $userOwnedObjects = @()
 
         try {  #BUGBUG: Investigate why this crashes in the Live tenant (even if user-created-objects exist...which should show up as 'user-owned' by default!) 
-            $userOwnedObjects = [array] (Get-AzureADUserOwnedObject -ObjectId $currUser)
+            $userOwnedObjects = [array] (Get-MgUserOwnedObject -UserId $currUser)
         }
         catch { #As a workaround, we take user-created objects, which seems to work (strange!)
-            $userCreatedObjects = [array] (Get-AzureADUserCreatedObject -ObjectId $currUser)
+            $userCreatedObjects = [array] (Get-MgUserCreatedObject -UserId $currUser)
             $userOwnedObjects = $userCreatedObjects
         }
         #TODO Explore delta between 'user-created' v. 'user-owned' for Apps/SPNs
@@ -117,16 +129,16 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $appObjects = [array] (Get-AzADApplication -First $this.BatchThreshold -Skip $this.BatchCounters.App);
+                    $appObjects = [array] (Get-MgApplication -Top $this.BatchThreshold -Skip $this.BatchCounters.App);
                     $this.BatchCounters.App += $appObjects.Count;
                 }
                 else
                 {
-                    $appObjects = [array] (Get-AzADApplication -First $maxObj);
+                    $appObjects = [array] (Get-MgApplication -Top $maxObj);
                 }
             }
             else {
-                $appObjects = [array] ($userOwnedObjects | ?{$_.ObjectType -eq 'Application'})
+                $appObjects = [array] ($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.application'})
             }
 
             $appTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -139,11 +151,11 @@ class AADResourceResolver: Resolver
             $nObj = $maxObj
             foreach ($obj in $appObjects) {
                 $svtResource = [SVTResource]::new();
-                $svtResource.ResourceName = $obj.DisplayName;
+                $svtResource.ResourceName = $this.ExtractDisplayNameFromResource($obj);
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file. 
                 #TODO: If rgName == "" then all LOGs end up in root folder alongside CSV, README.txt. May need to have a reasonable 'mock' RGName.
                 $svtResource.ResourceType = "AAD.AppRegistration";
-                $svtResource.ResourceId = $obj.ObjectId     
+                $svtResource.ResourceId = $obj.Id     
                 $svtResource.ResourceTypeMapping = $appTypeMapping   
                 $this.SVTResources +=$svtResource
                 if (--$nObj -eq 0) { break;} 
@@ -157,16 +169,16 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $spnObjects = [array] (Get-AzADServicePrincipal -First $this.BatchThreshold -Skip $this.BatchCounters.SPN);
+                    $spnObjects = [array] (Get-MgServicePrincipal -Top $this.BatchThreshold -Skip $this.BatchCounters.SPN);
                     $this.BatchCounters.SPN += $spnObjects.Count;
                 }
                 else
                 {
-                    $spnObjects = [array] (Get-AzADServicePrincipal -First $maxObj);
+                    $spnObjects = [array] (Get-MgServicePrincipal -Top $maxObj);
                 }
             }
             else {
-                $spnObjects = [array] ($userOwnedObjects | ?{$_.ObjectType -eq 'ServicePrincipal'})
+                $spnObjects = [array] ($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.servicePrincipal'})
             }
             
             $spnTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -176,10 +188,10 @@ class AADResourceResolver: Resolver
             $nObj = $maxObj
             foreach ($obj in $spnObjects) {
                 $svtResource = [SVTResource]::new();
-                $svtResource.ResourceName = $obj.DisplayName;
+                $svtResource.ResourceName = $this.ExtractDisplayNameFromResource($obj);
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file.
                 $svtResource.ResourceType = "AAD.EnterpriseApplication";
-                $svtResource.ResourceId = $obj.ObjectId     
+                $svtResource.ResourceId = $obj.Id     
                 $svtResource.ResourceTypeMapping = $spnTypeMapping   
                 $this.SVTResources +=$svtResource
                 if (--$nObj -eq 0) { break;} 
@@ -202,7 +214,7 @@ class AADResourceResolver: Resolver
                 }
             }
             else {
-                $DeviceObjects = [array] (Get-AzureADUserOwnedDevice -ObjectId $currUser)
+                $DeviceObjects = [array] (Get-MgUserOwnedDevice -UserId $currUser)
             }
             
             $deviceTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -212,10 +224,10 @@ class AADResourceResolver: Resolver
             $nObj = $maxObj
             foreach ($obj in $deviceObjects) {
                 $svtResource = [SVTResource]::new();
-                $svtResource.ResourceName = $obj.DisplayName;
+                $svtResource.ResourceName = $this.ExtractDisplayNameFromResource($obj)
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file.
                 $svtResource.ResourceType = "AAD.Device";
-                $svtResource.ResourceId = $obj.ObjectId     
+                $svtResource.ResourceId = $obj.Id     
                 $svtResource.ResourceTypeMapping = $deviceTypeMapping   
                 $this.SVTResources +=$svtResource
                 if (--$nObj -eq 0) { break;} 
@@ -230,16 +242,16 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $userObjects = [array] (Get-AzADUser -First $this.BatchThreshold -Skip $this.BatchCounters.User);
+                    $userObjects = [array] (Get-MgUser -Top $this.BatchThreshold -Skip $this.BatchCounters.User);
                     $this.BatchCounters.User += $userObjects.Count;
                 }
                 else
                 {
-                    $userObjects = [array] (Get-AzureADUser -Top $maxObj)
+                    $userObjects = [array] (Get-MgUser -Top $maxObj)
                 }
             }
             else {
-                $userObjects = [array] (Get-AzureADUser -ObjectId $currUser)
+                $userObjects = [array] (Get-MgUser -UserId $currUser)
             }
 
             $userTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -249,10 +261,10 @@ class AADResourceResolver: Resolver
             $nObj = $maxObj
             foreach ($obj in $userObjects) {
                 $svtResource = [SVTResource]::new();
-                $svtResource.ResourceName = $obj.DisplayName;
+                $svtResource.ResourceName = $obj.DisplayName
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file.
                 $svtResource.ResourceType = "AAD.User";
-                $svtResource.ResourceId = $obj.ObjectId     
+                $svtResource.ResourceId = $obj.Id     
                 $svtResource.ResourceTypeMapping = $userTypeMapping   
                 $this.SVTResources +=$svtResource
                 if (--$nObj -eq 0) { break;} 
@@ -267,16 +279,16 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $grpObjects = [array] (Get-AzADGroup -First $this.BatchThreshold -Skip $this.BatchCounters.Group);
+                    $grpObjects = [array] (Get-MgGroup -Top $this.BatchThreshold -Skip $this.BatchCounters.Group);
                     $this.BatchCounters.Group += $grpObjects.Count;
                 }
                 else
                 {
-                    $grpObjects = [array] (Get-AzADGroup -First $maxObj)
+                    $grpObjects = [array] (Get-MgGroup -Top $maxObj)
                 }
             }
             else {
-                $grpObjects = [array] ($userOwnedObjects | ?{$_.ObjectType -eq 'Group'})
+                $grpObjects = [array] ($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.group'})
             }
 
             $grpTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -286,10 +298,10 @@ class AADResourceResolver: Resolver
             $nObj = $maxObj
             foreach ($obj in $grpObjects) {
                 $svtResource = [SVTResource]::new();
-                $svtResource.ResourceName = $obj.DisplayName;
+                $svtResource.ResourceName = $this.ExtractDisplayNameFromResource($obj);;
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file.
                 $svtResource.ResourceType = "AAD.Group";
-                $svtResource.ResourceId = $obj.ObjectId     
+                $svtResource.ResourceId = $obj.Id     
                 $svtResource.ResourceTypeMapping = $grpTypeMapping   
                 $this.SVTResources +=$svtResource
                 if (--$nObj -eq 0) { break;} 
