@@ -11,7 +11,7 @@ class AADResourceResolver: Resolver
     [int] $BatchThreshold;
     [bool] $ShouldBatchScan;
     [string[]] $ObjectTypesToScan;
-    hidden static [string[]] $AllTypes = @("AppRegistration", "Device", "Group", "EnterpriseApplication", "User");
+    hidden static [string[]] $AllTypes = @("AppRegistration", "EnterpriseApplication");
     hidden [PsCustomObject] $BatchCounters = [PSCustomObject]@{
         App = 0
         SPN = 0
@@ -83,17 +83,17 @@ class AADResourceResolver: Resolver
         $bAdmin = [AccountHelper]::IsUserInAPermanentAdminRole();
 
         #scanTenant is used to determine is the scan is tenant wide or just within the scope of the current (logged-in) user.
-        if ($this.scanTenant)
-        {
-            $svtResource = [SVTResource]::new();
-            $svtResource.ResourceName = $this.tenantContext.TenantName;
-            $svtResource.ResourceType = "AAD.Tenant";
-            $svtResource.ResourceId = $this.tenantId
-            $svtResource.ResourceTypeMapping = ([SVTMapping]::AADResourceMapping |
-                                            Where-Object { $_.ResourceType -eq $svtResource.ResourceType } |
-                                            Select-Object -First 1)
-            $this.SVTResources +=$svtResource
-        }
+        # if ($this.scanTenant)
+        # {
+        #     $svtResource = [SVTResource]::new();
+        #     $svtResource.ResourceName = $this.tenantContext.TenantName;
+        #     $svtResource.ResourceType = "AAD.Tenant";
+        #     $svtResource.ResourceId = $this.tenantId
+        #     $svtResource.ResourceTypeMapping = ([SVTMapping]::AADResourceMapping |
+        #                                     Where-Object { $_.ResourceType -eq $svtResource.ResourceType } |
+        #                                     Select-Object -First 1)
+        #     $this.SVTResources +=$svtResource
+        # }
 
         $currUser = [AccountHelper]::GetCurrentSessionUserObjectId();
 
@@ -115,6 +115,10 @@ class AADResourceResolver: Resolver
             $appObjects = @()
             if ($this.scanTenant)
             {
+                if($this.ShouldBatchScan)
+                {
+                    Write-Host "You have requested for a full tenant scan. Loading resources will take some time. Since this is a preview version, we have added a hard stop to scan first 15K resources." -ForegroundColor "Yello"
+                }
                 if ($this.ShouldBatchScan)
                 {
                     $appObjects = [array] (Get-AzADApplication -First $this.BatchThreshold -Skip $this.BatchCounters.App);
@@ -179,7 +183,13 @@ class AADResourceResolver: Resolver
                 $svtResource.ResourceName = $obj.DisplayName;
                 $svtResource.ResourceGroupName = ""  #If blank, the column gets skipped in CSV file.
                 $svtResource.ResourceType = "AAD.EnterpriseApplication";
-                $svtResource.ResourceId = $obj.ObjectId     
+                if($this.scanTenant)
+                {
+                    $svtResource.ResourceId = $obj.Id     
+                }
+                else{
+                    $svtResource.ResourceId = $obj.ObjectId  
+                }
                 $svtResource.ResourceTypeMapping = $spnTypeMapping   
                 $this.SVTResources +=$svtResource
                 if (--$nObj -eq 0) { break;} 

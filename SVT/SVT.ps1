@@ -78,7 +78,7 @@ function Get-AzSKAADSecurityStatusTenant
 					$returnValue = $secStatus.EvaluateControlStatus();
 				}
 				$totalResourcesScanned += $resolver.SVTResourcesFoundCount;
-			} While($resolver.SVTResourcesFoundCount -gt 0 -and $resolver.ShouldBatchScan -and ($MaxObj -le 0 -or $totalResourcesScanned -lt $MaxObj)); 
+			} While(($resolver.SVTResourcesFoundCount -gt 0 -and $resolver.SVTResourcesFoundCount -le 15000)-and $resolver.ShouldBatchScan -and ($MaxObj -le 0 -or $totalResourcesScanned -lt $MaxObj)); 
 			return $evaluationResult;
 		}
 		catch 

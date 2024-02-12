@@ -12,7 +12,7 @@
     RootModule             = '.\AzSK.EntraID.psm1'
 
     # Version number of this module.
-    ModuleVersion          = '0.9.0'
+    ModuleVersion          = '0.9.3'
 
     # ID used to uniquely identify this module
     GUID                   = 'b9bba5c3-9036-4163-b0b0-6d4e83519b0a'
@@ -93,7 +93,7 @@
     # Private data to pass to the module specified in RootModule/ModuleToProcess
     PrivateData            = @{
         PSData = @{
-            ExternalModuleDependencies = @('Az.Accounts','AzureAD')
+            ExternalModuleDependencies = @('Az.Accounts','Az.Resources','AzureAD')
             # Tags applied to this module. These help with module discovery in online galleries.
             Tags         = 'AAD', 'AzSK', 'AzureActiveDirectory', 'AADSecurity'
 
