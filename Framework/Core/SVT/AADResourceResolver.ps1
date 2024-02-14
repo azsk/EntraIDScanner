@@ -18,7 +18,9 @@ class AADResourceResolver: Resolver
         Device = 0
         Group = 0
         User = 0
+        UserOwnedObjects = 0
     }
+    hidden [bool] $isTenantScanned = $false;
 
     AADResourceResolver([string]$tenantId, [bool] $bScanTenant): Base($tenantId)
 	{
@@ -95,7 +97,7 @@ class AADResourceResolver: Resolver
         $bAdmin = [AccountHelper]::IsUserInAPermanentAdminRole();
 
         #scanTenant is used to determine is the scan is tenant wide or just within the scope of the current (logged-in) user.
-        if ($this.scanTenant)
+        if ($this.scanTenant -and !$this.isTenantScanned)
         {
             $svtResource = [SVTResource]::new();
             $svtResource.ResourceName = $this.tenantContext.TenantName;
@@ -105,6 +107,7 @@ class AADResourceResolver: Resolver
                                             Where-Object { $_.ResourceType -eq $svtResource.ResourceType } |
                                             Select-Object -First 1)
             $this.SVTResources +=$svtResource
+            $this.isTenantScanned = $true;
         }
 
         $currUser = [AccountHelper]::GetCurrentSessionUserObjectId();
@@ -112,10 +115,26 @@ class AADResourceResolver: Resolver
         $userOwnedObjects = @()
 
         try {  #BUGBUG: Investigate why this crashes in the Live tenant (even if user-created-objects exist...which should show up as 'user-owned' by default!) 
-            $userOwnedObjects = [array] (Get-MgUserOwnedObject -UserId $currUser)
+            if ($this.ShouldBatchScan)
+            {
+                $userOwnedObjects = [array] (Get-MgUserOwnedObject -UserId $currUser -Top $this.BatchThreshold -Skip $this.BatchCounters.UserOwnedObjects);
+                $this.BatchCounters.UserOwnedObjects += $userOwnedObjects.Count;
+            }
+            else
+            {
+                $userOwnedObjects = [array] (Get-MgUserOwnedObject -UserId $currUser -Top $this.MaxObjectsToScan);   
+            }
         }
         catch { #As a workaround, we take user-created objects, which seems to work (strange!)
-            $userCreatedObjects = [array] (Get-MgUserCreatedObject -UserId $currUser)
+            if ($this.ShouldBatchScan)
+            {
+                $userCreatedObjects = [array] (Get-MgUserCreatedObject -UserId $currUser -Top $this.BatchThreshold -Skip $this.BatchCounters.UserOwnedObjects);
+                $this.BatchCounters.UserOwnedObjects += $userCreatedObjects.Count;
+            }
+            else
+            {
+                $userCreatedObjects = [array] (Get-MgUserCreatedObject -UserId $currUser -Top $this.MaxObjectsToScan);   
+            }
             $userOwnedObjects = $userCreatedObjects
         }
         #TODO Explore delta between 'user-created' v. 'user-owned' for Apps/SPNs

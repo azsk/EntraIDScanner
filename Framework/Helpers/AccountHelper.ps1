@@ -115,7 +115,9 @@ class AccountHelper {
         [AccountHelper]::GraphAccessToken = $null;
         [AccountHelper]::tenantInfoMsg = $null;
         [AccountHelper]::UserAADPrivRoles = [PrivilegedAADRoles]::None; 
-        [AccountHelper]::rolesLoaded = $false;    
+        [AccountHelper]::rolesLoaded = $false; 
+        [AccountHelper]::currentMgContext = $null;
+        [AccountHelper]::currentMgUserObject = $null;
     }
     
     hidden static [PSObject] GetGraphToken()
