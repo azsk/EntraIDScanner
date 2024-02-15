@@ -1,7 +1,7 @@
 Set-StrictMode -Version Latest 
 class AppRegistration: SVTBase {    
     hidden [PSObject] $ResourceObject;
-
+    hidden [PSObject] $MgResouceObject;
     hidden [hashtable] $DNSCache = @{};
 
     hidden [Hashtable] $ServicePrincipalCache;
@@ -12,6 +12,7 @@ class AppRegistration: SVTBase {
 
         $objId = $svtResource.ResourceId
         $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
+        $this.MgResouceObject = Get-MgApplication -ApplicationId $objId;
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
         $this.AppOwners = [array] (Get-AzureADApplicationOwner -ObjectId $objId)
@@ -19,6 +20,10 @@ class AppRegistration: SVTBase {
 
     hidden [PSObject] GetResourceObject() {
         return $this.ResourceObject;
+    }
+
+    hidden [PsObject] GetMgResourceObject() {
+        return $this.MgResouceObject;
     }
 
     hidden [bool] IsURLDangling([string] $uri) {
@@ -39,9 +44,9 @@ class AppRegistration: SVTBase {
     {
         $secretsWithLongExpiry = [System.Collections.ArrayList]::new();
         foreach ($secret in $secrets) { 
-            if ($secret.EndDate -gt ([datetime]::UtcNow).AddDays($this.ControlSettings.Application.CredentialExpiryThresholdInDays)) {
+            if ($secret.EndDateTime -gt ([datetime]::UtcNow).AddDays($this.ControlSettings.Application.CredentialExpiryThresholdInDays)) {
                 $secretsWithLongExpiry.Add([PSCustomObject]@{
-                        ExpiryInDays = ($secret.EndDate - [datetime]::UtcNow).Days
+                        ExpiryInDays = ($secret.EndDateTime - [datetime]::UtcNow).Days
                         SecretId     = $secret.KeyId
                     })
             }
@@ -177,11 +182,10 @@ class AppRegistration: SVTBase {
 
 
     hidden [ControlResult] CheckAppIsCurrentTenantOnly([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject();
         
         #Currently there are 2 places this might be set, AvailableToOtherTenants setting or SignInAudience = "AzureADMultipleOrgs" (latter is new)
-        if ( ($app.AvailableToOtherTenants -eq $true) -or
-            (-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg")) {
+        if ($app.SignInAudience -ne "AzureADMyOrg") {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 [MessageData]::new("The app [$($app.DisplayName)] is not limited to current enterprise tenant."));
         }
@@ -335,7 +339,7 @@ class AppRegistration: SVTBase {
 
     hidden [ControlResult] CheckOrphanedAppDoesNotHaveLongExpirySecrets([ControlResult] $controlResult)
     {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject();
 
         $clientCredentials = $app.PasswordCredentials
         if ($null -eq $clientCredentials -or $clientCredentials.Count -eq 0) {
@@ -370,7 +374,7 @@ class AppRegistration: SVTBase {
     }
     
     hidden [ControlResult] CheckAppDoesNotHaveLongExpirySecrets([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject();
 
         $clientCredentials = $app.PasswordCredentials
         if ($null -eq $clientCredentials -or $clientCredentials.Count -eq 0) {

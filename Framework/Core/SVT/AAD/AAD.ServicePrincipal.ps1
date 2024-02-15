@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 class EnterpriseApplication: SVTBase
 {    
     hidden [PSObject] $ResourceObject;
+    hidden [PSObject] $MgResourceObject;
     hidden [String] $SPNName;
     hidden [psobject] $RiskyPermissions;
     hidden [hashtable] $RiskyAdminConsentPermissionsCache;
@@ -12,7 +13,9 @@ class EnterpriseApplication: SVTBase
         #$this.GetResourceObject();
         $objId = $svtResource.ResourceId
 
-        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
+        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId;
+        $this.MgResourceObject = Get-MgServicePrincipal -ServicePrincipalId $objId;
+
         $this.SPNName = $this.ResourceObject.DisplayName
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAD.RiskyPermissions.json', $true);
     }
@@ -22,9 +25,14 @@ class EnterpriseApplication: SVTBase
         return $this.ResourceObject;
     }
 
+    hidden [PSObject] GetMgResourceObject()
+    {
+        return $this.MgResourceObject;
+    }
+
     hidden [ControlResult] CheckSPNPasswordCredentials([ControlResult] $controlResult)
 	{
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         if ($spn.PasswordCredentials.Count -gt 0)
         {
@@ -337,7 +345,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckEnterpiseApplicationDoesNotUsePasswordCredentials([ControlResult] $controlResult)
 	{
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
         if ($spn.ServicePrincipalType -ne 'Application')
         {
             $controlResult.AddMessage([VerificationResult]::Passed,
