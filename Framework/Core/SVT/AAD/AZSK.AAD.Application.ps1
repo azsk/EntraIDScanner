@@ -15,7 +15,7 @@ class AppRegistration: SVTBase {
         $this.MgResouceObject = Get-MgApplication -ApplicationId $objId;
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
-        $this.AppOwners = [array] (Get-AzureADApplicationOwner -ObjectId $objId)
+        $this.AppOwners = [array] (Get-MgApplicationOwnerAsUser -ApplicationId $objId -Select UserType, Mail, Id, UserPrincipalName)
     }
 
     hidden [PSObject] GetResourceObject() {
@@ -312,7 +312,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckAppHasFTEOwnerOnly([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -399,7 +399,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckAppUsesMiniminalPermissions([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject();
+        $app = $this.GetMgResourceObject();
         $globalAppFlaggedPermissions = [System.Collections.ArrayList]::new();
         foreach ($resource in $app.RequiredResourceAccess) {
             $flaggedDelegatePermissions = [System.Collections.ArrayList]::new();
