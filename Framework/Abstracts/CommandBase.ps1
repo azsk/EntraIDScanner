@@ -260,7 +260,7 @@ class CommandBase: AzSKRoot {
 			$autoUpdateContent = [ConfigurationHelper]::LoadOfflineConfigFile("ModuleAutoUpdate.ps1");
 			if(-not (Test-Path -Path $AzSKTemp))
 			{
-				mkdir -p $AzSKTemp -Force
+				New-Item -ItemType Directory -Path $AzSKTemp -Force
 			}
 			Remove-Item -Path "$AzSKTemp\au_*" -Force -Recurse -ErrorAction SilentlyContinue
 

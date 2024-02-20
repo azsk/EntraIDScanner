@@ -210,7 +210,7 @@ class SVTCommandBase: CommandBase {
 				$AzureRMDataCollectionSettingFolderpath= [Constants]::AzSKAppFolderPath + "\AzureRMDataCollectionSettings"
 				if(-not (Test-Path -Path $AzureRMDataCollectionSettingFolderpath))
 				{
-					mkdir -p $AzureRMDataCollectionSettingFolderpath -Force
+					New-Item -ItemType Directory -Path $AzureRMDataCollectionSettingFolderpath -Force
                 }
                 
 				$AzureRMDataCollectionFilePath = $AzureRMDataCollectionSettingFolderpath + "\AzurePSDataCollectionProfile.json"

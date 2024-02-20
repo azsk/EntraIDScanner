@@ -110,7 +110,7 @@ Repair-AzSKSubscriptionSecurity `
 		$parentFolderPath = (Get-Item -Path $PSScriptRoot).Parent.Parent.FullName;
 		$parentFolderPath += [WriteFixControlFiles]::FixFilePath;
 		$fixControlFileNames | ForEach-Object {
-			mkdir -p (Join-Path $($this.FolderPath), "Services") | Out-Null
+			New-Item -ItemType Directory -Path (Join-Path $($this.FolderPath), "Services") | Out-Null
 			Copy-Item ($parentFolderPath + $_) (Join-Path $($this.FolderPath) "Services"  $($_))
 		};
 	}
