@@ -6,7 +6,7 @@ class Device: SVTBase
     Device([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
         $objId = $svtResource.ResourceId
-        $this.ResourceObject = Get-MgDevice -DeviceId $objId
+        $this.MgResourceObject = Get-MgDevice -DeviceId $objId
     }
 
     hidden [PSObject] GetMgResourceObject()

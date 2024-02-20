@@ -146,7 +146,7 @@ class AccountHelper {
     }
 
     # Can be called with $null (when tenantId is not specified by the user)
-    hidden static [PSObject] GetCurrentAzContext($desiredTenantId)
+    hidden static [PSObject] GetCurrentAzContext($desiredTenantId, $interactive)
     {
         if(-not [AccountHelper]::currentAzContext)
         {
@@ -163,7 +163,14 @@ class AccountHelper {
                 }
                 #Now try to fetch a fresh context.
                 try {
-                        $azureContext = Connect-AzAccount -ErrorAction Stop -UseDeviceAuthentication -Tenant $desiredTenantId
+                        if ($interactive -eq $true)
+                        {
+                            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId;
+                        }
+                        else
+                        {
+                            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId -UseDeviceAuthentication;
+                        }
                         #On a fresh login, the 'cached' context object we care about is inside the AzureContext
                         $azContext = $azureContext.Context 
                 }
@@ -211,10 +218,11 @@ class AccountHelper {
                 $azContext = $null;
                 try {
                     #Either throws or returns non-null
-                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId);
+                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId, $true);
                 }
                 catch {
-                    Write-Warning "Could not acquire Azure context. Falling back to Connect-AzureAD...";
+                    Write-Warning "Could not acquire Azure context interactively, will fallback to device mode";
+                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId, $false);
                 }
                 
                 if ($null -ne $azContext -and $null -ne $azContext.Tenant) #Can be $null when a user has no Azure subscriptions.
@@ -235,6 +243,7 @@ class AccountHelper {
                 }
 
                 $graphToken = ConvertTo-SecureString ([AccountHelper]::GetGraphToken().Token) -AsPlainText -Force;
+                Disconnect-MgGraph;
                 Connect-MgGraph -AccessToken $graphToken -NoWelcome;
                 $mgCtx = Get-MgContext;
 
@@ -244,11 +253,12 @@ class AccountHelper {
                     throw ([SuppressedException]::new("Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($mgCtx.TenantId)", [SuppressedExceptionType]::Generic));
                 }
 
-                $upn = 'gtarun047_gmail.com#EXT#@gtarun047gmail.onmicrosoft.com';
+                $upn = $mgCtx.Account;
                 if (-not $crossTenant) 
                 {
+                    $userId = $azContext.Account.ExtendedProperties.HomeAccountId.Split('.')[0]
                     #in this case UPN is same as signin name use
-                    $mgUserObj = Get-MgUser -Filter "UserPrincipalName eq '$upn'";
+                    $mgUserObj = Get-MgUser -UserId $userId
                 }
                 else 
                 {

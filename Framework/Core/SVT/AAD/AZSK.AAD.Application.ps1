@@ -15,7 +15,7 @@ class AppRegistration: SVTBase {
         $this.MgResouceObject = Get-MgApplication -ApplicationId $objId;
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
-        $this.AppOwners = [array] (Get-MgApplicationOwnerAsUser -ApplicationId $objId -Select UserType, Mail, Id, UserPrincipalName)
+        $this.AppOwners = [array] (Get-MgApplicationOwnerAsUser -ApplicationId $objId -Select UserType, Mail, Id, UserPrincipalName);
     }
 
     hidden [PsObject] GetMgResourceObject() {
@@ -476,7 +476,7 @@ class AppRegistration: SVTBase {
             try
             {
                 # Invoke Graph API to retrieve app information
-                $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $this.ResourceObject.AppId)
+                $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $app.AppId)
 
                 # Check if app instance lock property is enabled for all properties
                 if($null -ne $appAPIObj.servicePrincipalLockConfiguration -and $appAPIObj.servicePrincipalLockConfiguration.isEnabled -and $appAPIObj.servicePrincipalLockConfiguration.allProperties)

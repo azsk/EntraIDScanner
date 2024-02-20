@@ -66,9 +66,7 @@ function Get-AzSKEntraIDSecurityStatusTenant
 				$TenantId = $resolver.TenantId 
 			}
 
-			$sw = [System.Diagnostics.Stopwatch]::StartNew();
 			$secStatus = [ServicesSecurityStatus]::new($TenantId, $PSCmdlet.MyInvocation, $resolver);
-			Write-Host "Time taken", $sw.ElapsedMilliseconds;
 			$evaluationResult = $secStatus.EvaluateControlStatus();
 			$resolver.ClearResources();
 			return $evaluationResult;

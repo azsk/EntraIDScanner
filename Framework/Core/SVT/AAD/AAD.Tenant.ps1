@@ -15,7 +15,7 @@ class Tenant: SVTBase
     hidden [PSObject] $DeviceSettings;
 
     hidden static [PSObject] $TenantDetails;
-    hidden static [bool] $isDirSyncEnabled = $false;
+    hidden static [bool] $isOnPremisesSyncEnabled = $false;
 
     Tenant([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
@@ -29,7 +29,7 @@ class Tenant: SVTBase
         if ([Tenant]::TenantDetails -eq $null)
         {
             [Tenant]::TenantDetails = Get-MgOrganization
-            [Tenant]::isDirSyncEnabled = [Tenant]::TenantDetails.DirSyncEnabled
+            [Tenant]::isOnPremisesSyncEnabled = [Tenant]::TenantDetails.OnPremisesSyncEnabled
         }
 
         if ($this.AADPermissions -eq $null)
@@ -105,9 +105,9 @@ class Tenant: SVTBase
         if ([Tenant]::TenantDetails -eq $null)
         {
             [Tenant]::TenantDetails = Get-MgOrganization
-            [Tenant]::isDirSyncEnabled = [Tenant]::TenantDetails.DirSyncEnabled
+            [Tenant]::isOnPremisesSyncEnabled = [Tenant]::TenantDetails.OnPremisesSyncEnabled
         }
-        return [Tenant]::isDirSyncEnabled
+        return [Tenant]::isOnPremisesSyncEnabled
     }
 
     [ControlItem[]] ApplyServiceFilters([ControlItem[]] $controls)
