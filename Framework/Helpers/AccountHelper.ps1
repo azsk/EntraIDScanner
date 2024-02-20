@@ -254,18 +254,31 @@ class AccountHelper {
                 }
 
                 $upn = $mgCtx.Account;
+
+                if ($null -eq $upn)
+                {
+                    # UPN is null for personal microsoft accounts
+                    $upn = $azContext.Account.Id;
+                }
+
                 if (-not $crossTenant) 
                 {
-                    $userId = $azContext.Account.ExtendedProperties.HomeAccountId.Split('.')[0]
-                    #in this case UPN is same as signin name use
-                    $mgUserObj = Get-MgUser -UserId $userId
+                    #Try direct match first
+                    $mgUserObj = Get-MgUser -Filter "UserPrincipalName eq '$upn'";
                 }
-                else 
+
+                if ($null -eq $mgUserObj)
                 {
+                    # Personal microsoft accounts also have user_mail@user_mail.onmicrosoft.com
                     #Cross-tenant, UPN is the mangled version e.g., joe_contoso.com#desiredtenant.com
                     $upnx = (($upn -replace '@', '_')+'#')
                     $filter = "startswith(UserPrincipalName,'" + $upnx + "')";
                     $mgUserObj = Get-MgUser -Filter $filter;
+                }
+
+                if ($null -eq $mgUserObj)
+                {
+                    throw ([SuppressedException]::new("Could not find the user in the provided tenant, are you sure the right tenant id is passed?`n$_", [SuppressedExceptionType]::Generic))
                 }
             }
             catch {
