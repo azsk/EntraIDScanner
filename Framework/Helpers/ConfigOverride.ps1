@@ -97,7 +97,7 @@ class ConfigOverride
 
 		if (-not (Test-Path $folderName)) 
 		{
-			mkdir -Path $folderName -ErrorAction Stop | Out-Null
+			mkdir -p $folderName -ErrorAction Stop | Out-Null
 		}
 
 		if (-not $folderName.EndsWith("\"))

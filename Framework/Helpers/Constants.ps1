@@ -88,10 +88,10 @@ class Constants
 	}
 
 	static [string] $StorageAccountPreName= "azsk"
-	static [string] $AzSKAppFolderPath = $Env:LOCALAPPDATA + "\Microsoft\" + [Constants]::AzSKModuleName
-	static [string] $AzSKLogFolderPath = $Env:LOCALAPPDATA + "\Microsoft\"
-	static [string] $AzSKTempFolderPath = $env:TEMP + "\" + [Constants]::AzSKModuleName + "\"
-	static [string] $AzSKExtensionsFolderPath = $Env:LOCALAPPDATA + "\Microsoft\" + [Constants]::AzSKModuleName + "\Extensions"
+	static [string] $AzSKAppFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft" $([Constants]::AzSKModuleName));
+	static [string] $AzSKLogFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft");
+	static [string] $AzSKTempFolderPath = (Join-Path $([System.IO.Path]::GetTempPath()) [Constants]::AzSKModuleName);
+	static [string] $AzSKExtensionsFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft" $([Constants]::AzSKModuleName) "Extensions");
 	static [string] $ARMManagementUri = "https://management.azure.com/";	
 	static [string] $VersionCheckMessage = "A newer version of AzSK is available: Version {0} `r`nTo update, run the command below in a fresh PS window:`r`n" ;
 	static [string] $VersionWarningMessage = ("Using the latest version ensures that AzSK security commands you run use the latest, most up-to-date controls. `r`nResults from the current version should not be considered towards compliance requirements.`r`n" + [Constants]::DoubleDashLine);
@@ -183,7 +183,7 @@ class Constants
 		if(-not [string]::IsNullOrWhiteSpace($moduleName))
 		{
 			[Constants]::AzSKModuleName = $moduleName.Replace("azsk","AzSK");
-			[Constants]::AzSKAppFolderPath = $Env:LOCALAPPDATA + "\Microsoft\" + [Constants]::AzSKModuleName
+			[Constants]::AzSKAppFolderPath = [Environment]::GetFolderPath("LocalApplicationData") + "\Microsoft\" + [Constants]::AzSKModuleName
 			[Constants]::AzSKTempFolderPath = $env:TEMP + "\" + [Constants]::AzSKModuleName + "\"
 		}
 	}

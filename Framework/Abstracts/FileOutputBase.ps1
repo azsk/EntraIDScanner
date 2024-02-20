@@ -87,7 +87,7 @@ class FileOutputBase: ListenerBase
 			{
 				try
 				{
-					mkdir -Path $outputPath -ErrorAction Stop | Out-Null
+					mkdir -p $outputPath -ErrorAction Stop | Out-Null
 				}
 				catch
 				{

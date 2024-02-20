@@ -100,7 +100,7 @@ class ConfigurationManager
 
 		if(-not (Test-Path -Path $localExtensionsFolderPath))
 		{
-			mkdir -Path $localExtensionsFolderPath -Force
+			mkdir -p $localExtensionsFolderPath -Force
 		}
 		
 		$extensionScriptCode = [ConfigurationManager]::LoadServerFileRaw($fileName);

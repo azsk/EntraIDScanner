@@ -75,7 +75,7 @@ class AzSKSettings {
 		$localAppDataSettings = $null
 
 		# TBR : AzSDK cleanup on local machine for Local settings folder
-		$AzSDKAppFolderPath = $Env:LOCALAPPDATA + "\Microsoft\" + "AzSDK*"
+		$AzSDKAppFolderPath = [Environment]::GetFolderPath("LocalApplicationData") + "\Microsoft\" + "AzSDK*"
 		if(Test-Path -Path $AzSDKAppFolderPath)
 		{
 		    Get-ChildItem -Path $AzSDKAppFolderPath -Directory | Remove-Item -Recurse -Force
@@ -154,7 +154,7 @@ class AzSKSettings {
 	{
 		if (-not (Test-Path $([Constants]::AzSKAppFolderPath)))
 		{
-			mkdir -Path $([Constants]::AzSKAppFolderPath) -ErrorAction Stop | Out-Null
+			mkdir -p $([Constants]::AzSKAppFolderPath) -ErrorAction Stop | Out-Null
 		}
 
 		#persisting back to file
@@ -165,7 +165,7 @@ class AzSKSettings {
 	{
 		if (-not (Test-Path $([Constants]::AzSKAppFolderPath)))
 		{
-			mkdir -Path $([Constants]::AzSKAppFolderPath) -ErrorAction Stop | Out-Null
+			mkdir -p $([Constants]::AzSKAppFolderPath) -ErrorAction Stop | Out-Null
 		}
 
 		#persisting back to file

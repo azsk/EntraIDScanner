@@ -1070,7 +1070,7 @@ class Helpers {
     {
         if(-not (Test-Path $FolderPath))
 		{
-			mkdir -Path $FolderPath -ErrorAction Stop | Out-Null
+			mkdir -p $FolderPath -ErrorAction Stop | Out-Null
         }
         elseif($MakeFolderEmpty)
         {
