@@ -1,4 +1,5 @@
 Set-StrictMode -Version Latest 
+
 class AppRegistration: SVTBase {    
     hidden [PSObject] $ResourceObject;
     hidden [PSObject] $MgResouceObject;
@@ -68,7 +69,7 @@ class AppRegistration: SVTBase {
         $app = $this.GetMgResourceObject()
         $appName = $app.DisplayName
 
-        if ($appName -eq $null -or -not ($appName -imatch $demoAppsRegex)) {
+        if ($null -eq $appName -or -not ($appName -imatch $demoAppsRegex)) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No demo/test/pilot apps found.");
         }
@@ -81,27 +82,37 @@ class AppRegistration: SVTBase {
 
     hidden [ControlResult] CheckReturnURLsAreHTTPS([ControlResult] $controlResult) {
         $app = $this.GetMgResourceObject()
-        $ret = $false
-        if ($app.replyURLs -eq $null -or $app.replyURLs.Count -eq 0) {
-            $ret = $true
+        $verificationResult = $false
+
+        # Initialize an empty array to store all redirect URIs
+        $totalRedirectUris = @()
+
+        # Concatenate arrays from each individual list into $totalRedirectUris
+        $totalRedirectUris += $app.Spa.RedirectUris
+        $totalRedirectUris += $app.Web.RedirectUris
+        $totalRedirectUris += $app.PublicClient.RedirectUris
+
+        
+        if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
+            $verificationResult = $true
         }
         else {
             $nonHttpURLs = @()
-            foreach ($url  in $app.replyURLs) {
+            foreach ($url  in $totalRedirectUris) {
                 if ($url.tolower().startswith("http:")) {
                     $nonHttpURLs += $url
                 }
             }
 
             if ($nonHttpURLs.Count -eq 0) {
-                $ret = $true
+                $verificationResult = $true
             }
             else {
                 $controlResult.AddMessage("Found $($nonHttpURLs.Count) non-HTTPS URLs.");
             }
         }
         
-        if ($ret -eq $true) {
+        if ($verificationResult -eq $true) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No non-HTTPS URLs in replyURLs.");
         }
@@ -233,13 +244,22 @@ class AppRegistration: SVTBase {
 
     hidden [ControlResult] CheckRedirectURIsWithWilcard([ControlResult] $controlResult) {
         $app = $this.GetMgResourceObject()
-        if ($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0) {
+
+        # Initialize an empty array to store all redirect URIs
+        $totalRedirectUris = @()
+
+        # Concatenate arrays from each individual list into $totalRedirectUris
+        $totalRedirectUris += $app.Spa.RedirectUris
+        $totalRedirectUris += $app.Web.RedirectUris
+        $totalRedirectUris += $app.PublicClient.RedirectUris
+
+        if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No redirect URLs were found.");
         }
         else {
             $urlsWithWildcard = @()
-            foreach ($url  in $app.ReplyURLs) {
+            foreach ($url  in $totalRedirectUris) {
                 if ($url.Contains("*")) {
                     $urlsWithWildcard += $url
                 }
@@ -255,21 +275,29 @@ class AppRegistration: SVTBase {
                 $controlResult.DetailedResult = (ConvertTo-Json $urlsWithWildcard);
             }
         }
-        
 
         return $controlResult;
     }
 
     hidden [ControlResult] CheckDanglingRedirectURIs([ControlResult] $controlResult) {
         $app = $this.GetMgResourceObject()
-        if ($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0) {
+
+        # Initialize an empty array to store all redirect URIs
+        $totalRedirectUris = @()
+
+        # Concatenate arrays from each individual list into $totalRedirectUris
+        $totalRedirectUris += $app.Spa.RedirectUris
+        $totalRedirectUris += $app.Web.RedirectUris
+        $totalRedirectUris += $app.PublicClient.RedirectUris
+
+        if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No redirect URLs were found.");
         }
         else {
             $danglingUrls = @()
             
-            foreach ($url  in $app.ReplyURLs) {
+            foreach ($url  in $totalRedirectUris) {
                 $parsedUrl = $url
                 if ($parsedUrl -match "http://") {
                     $parsedUrl = ($url -split "http://" -split "/")[1]
@@ -303,7 +331,6 @@ class AppRegistration: SVTBase {
         }
         
         return $controlResult;
-
     }
 
     hidden [ControlResult] CheckAppHasFTEOwnerOnly([ControlResult] $controlResult) {
