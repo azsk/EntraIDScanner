@@ -124,6 +124,7 @@ class AppRegistration: SVTBase {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 "Found one or more non-HTTPS URLs in replyURLs.", 
                 "(TODO) Please review and change them to HTTPS. List of non-HTTPS URLs: $($nonHttpURLs -join ',')");
+            $controlResult.DetailedResult = (ConvertTo-Json $nonHttpURLs);
         }
 
         return $controlResult;
