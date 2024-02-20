@@ -10,19 +10,12 @@ class EnterpriseApplication: SVTBase
 
     EnterpriseApplication([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
-        #$this.GetResourceObject();
+        #$this.GetMgResourceObject();
         $objId = $svtResource.ResourceId
-
-        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId;
         $this.MgResourceObject = Get-MgServicePrincipal -ServicePrincipalId $objId;
 
         $this.SPNName = $this.ResourceObject.DisplayName
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAD.RiskyPermissions.json', $true);
-    }
-
-    hidden [PSObject] GetResourceObject()
-    {
-        return $this.ResourceObject;
     }
 
     hidden [PSObject] GetMgResourceObject()
@@ -53,7 +46,7 @@ class EnterpriseApplication: SVTBase
  
     hidden [ControlResult] ReviewLegacySPN([ControlResult] $controlResult)
 	{
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         if ($spn.ServicePrincipalType -eq 'Legacy')
         {
@@ -70,7 +63,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckCertNearingExpiry([ControlResult] $controlResult)
     {
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         $spk = [array] $spn.KeyCredentials
 
@@ -115,9 +108,9 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckEnterpriseApplicationHasFTEOwnerOnly([ControlResult] $controlResult)
     {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
-        $owners = [array] (Get-AzureADServicePrincipalOwner -ObjectId $app.ObjectId)
+        $owners = [array] (Get-MgServicePrincipalOwner -ServicePrincipalId $app.ObjectId)
         if ($owners -eq $null -or $owners.Count -eq 0)
         {
                 $controlResult.AddMessage([VerificationResult]::Failed,
@@ -360,7 +353,7 @@ class EnterpriseApplication: SVTBase
     <#
         hidden [ControlResult] TBD([ControlResult] $controlResult)
         {
-            $spn = $this.GetResourceObject()
+            $spn = $this.GetMgResourceObject()
 
             if ($spn.xyz)
             {

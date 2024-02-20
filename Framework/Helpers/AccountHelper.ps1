@@ -177,104 +177,6 @@ class AccountHelper {
         return [AccountHelper]::currentAzContext
     }
 
-    hidden static [PSObject] GetCurrentAADContextObselete($desiredTenantId) #Can be $null if user did not pass one.
-    {
-         # TODO: Remove this method once migration to microsoft graph is complete
-        $currAADCtx = [AccountHelper]::currentAADContext
-
-        # If we don't have a context *or* the context does not match a non-null desired tenant
-        if(-not $currAADCtx -or (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $currAADCtx.TenantID))
-        {
-            [AccountHelper]::ClearTenantContext($true)
-
-            $aadContext = $null
-            $aadUserObj = $null
-            #Try leveraging Azure context if available
-            try {
-                $tenantId = $null
-                $crossTenant = $false
-                $accountId = $null
-
-                if (-not [string]::IsNullOrEmpty($desiredTenantId))
-                {
-                    $tenantId = $desiredTenantId
-                }
-
-                $azContext = $null
-                try {
-                    #Either throws or returns non-null
-                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId)
-                    $accountId = $azContext.Account.Id    
-                }
-                catch {
-                    Write-Warning "Could not acquire Azure context. Falling back to Connect-AzureAD..."
-                }
-                
-                if ($azContext -ne $null -and $azContext.Tenant -ne $null) #Can be $null when a user has no Azure subscriptions.
-                {
-                    $nativeTenantId = $azContext.Tenant.Id
-                    if ($tenantId -eq $null) #No 'desired tenant' passed in by user
-                    {
-                        $tenantId = $nativeTenantId
-                    }
-                    else
-                    {
-                        #Check if desiredTenant and native tenant are diff => this user is guest in the desired tenant
-                        if ($nativeTenantId -ne $desiredTenantId)
-                        {
-                            $crossTenant = $true
-                        }
-                    }
-                }
-
-                $aadContext = $null
-                if (-not [string]::IsNullOrEmpty($tenantId) -and -not [string]::IsNullOrEmpty($accountId))
-                {
-                    $aadContext = Connect-AzureAD -TenantId $tenantId -AccountId $accountId -ErrorAction Stop
-                }
-                elseif (-not [string]::IsNullOrEmpty($accountId)) 
-                {
-                    $aadContext = Connect-AzureAd -AccountId $accountId -ErrorAction Stop
-                    $tenantId = $aadContext.TenantId
-                }
-                else {
-                    $aadContext = Connect-AzureAd -ErrorAction Stop
-                    $tenantId = $aadContext.TenantId
-                }
-
-                if (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $aadContext.TenantID)
-                {
-                    Write-Error "Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($aadContext.TenantId).`r`nYou may have mistyped the value of 'tenantId' parameter. Please try again!"
-                    throw ([SuppressedException]::new("Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($aadContext.TenantId)", [SuppressedExceptionType]::Generic))
-                }
-
-                $upn = $aadContext.Account.Id
-                if (-not $crossTenant) 
-                {
-                    #in this case UPN is same as signin name use
-                    $aadUserObj = Get-AzureADUser -Filter "UserPrincipalName eq '$upn'"
-                }
-                else 
-                {
-                    #Cross-tenant, UPN is the mangled version e.g., joe_contoso.com#desiredtenant.com
-                    $upnx = (($upn -replace '@', '_')+'#')
-                    $filter = "startswith(UserPrincipalName,'" + $upnx + "')"
-                    $aadUserObj = Get-AzureAdUser -Filter $filter
-                }
-            }
-            catch {
-                throw ([SuppressedException]::new("Could not acquire an AAD tenant context!`r`n$_", [SuppressedExceptionType]::Generic))
-            }
-
-            [AccountHelper]::ScanType = [CommandType]::AAD
-            [AccountHelper]::currentAADContext = $aadContext
-            [AccountHelper]::currentAADUserObject = $aadUserObj
-            [AccountHelper]::tenantInfoMsg = "Entra ID Tenant Info: `n`tDomain: $($aadContext.TenantDomain)`n`tTenanId: $($aadContext.TenantId)"
-        }
-
-        return [AccountHelper]::currentAADContext
-    }
-
     hidden static [PSObject] GetCurrentMgContext()
     {
         # TODO: Remove this method once migration to microsoft graph is complete
@@ -287,9 +189,6 @@ class AccountHelper {
 
     hidden static [PSObject] GetCurrentMgContext($desiredTenantId) #Can be $null if user did not pass one.
     {
-        # TODO: Remove this method call once migration is complete.
-        [AccountHelper]::GetCurrentAADContextObselete($desiredTenantId);
-
         $currMgCtx = [AccountHelper]::currentMgContext;
 
         if(-not $currMgCtx -or (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $currMgCtx.TenantId))

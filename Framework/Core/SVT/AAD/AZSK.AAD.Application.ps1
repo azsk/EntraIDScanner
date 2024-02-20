@@ -11,15 +11,10 @@ class AppRegistration: SVTBase {
     AppRegistration([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) {
 
         $objId = $svtResource.ResourceId
-        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
         $this.MgResouceObject = Get-MgApplication -ApplicationId $objId;
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
         $this.AppOwners = [array] (Get-MgApplicationOwnerAsUser -ApplicationId $objId -Select UserType, Mail, Id, UserPrincipalName)
-    }
-
-    hidden [PSObject] GetResourceObject() {
-        return $this.ResourceObject;
     }
 
     hidden [PsObject] GetMgResourceObject() {
@@ -70,7 +65,7 @@ class AppRegistration: SVTBase {
         $demoAppNames = $this.ControlSettings.Application.TestDemoPoCNames 
         $demoAppsRegex = [string]::Join('|', $demoAppNames) 
 
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
         $appName = $app.DisplayName
 
         if ($appName -eq $null -or -not ($appName -imatch $demoAppsRegex)) {
@@ -85,7 +80,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckReturnURLsAreHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
         $ret = $false
         if ($app.replyURLs -eq $null -or $app.replyURLs.Count -eq 0) {
             $ret = $true
@@ -119,7 +114,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckHomePageIsHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ((-not [String]::IsNullOrEmpty($app.HomePage)) -and $app.Homepage.ToLower().startswith('http:')) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -139,7 +134,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckLogoutURLIsHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ((-not [String]::IsNullOrEmpty($app.LogoutUrl)) -and $app.LogoutURL.ToLower().startswith('http:')) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -154,7 +149,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckImplicitFlowIsNotUsed([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
         if ($app.Oauth2AllowImplicitFlow -eq $true) {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 "Implicit Authentication flow is enabled for app [$($app.DisplayName)].");
@@ -167,7 +162,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckPrivacyDisclosure([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ([String]::IsNullOrEmpty($app.InformationalUrls.Privacy) -or (-not ($app.InformationalUrls.Privacy -match [Constants]::RegExForValidURL))) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -198,7 +193,7 @@ class AppRegistration: SVTBase {
 
     
     hidden [ControlResult] CheckOrphanedApp([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -212,7 +207,7 @@ class AppRegistration: SVTBase {
     }
     
     hidden [ControlResult] CheckAppFTEOwner([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -237,7 +232,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckRedirectURIsWithWilcard([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
         if ($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No redirect URLs were found.");
@@ -266,7 +261,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckDanglingRedirectURIs([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
         if ($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No redirect URLs were found.");
@@ -444,7 +439,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckAppInstanceLock([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject();
+        $app = $this.GetMgResourceObject();
         if ( ($app.AvailableToOtherTenants -eq $true) -or
         (-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg"))
         {

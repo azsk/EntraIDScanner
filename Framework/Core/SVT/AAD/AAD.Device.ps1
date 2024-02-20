@@ -1,22 +1,22 @@
 Set-StrictMode -Version Latest 
 class Device: SVTBase
 {    
-    hidden [PSObject] $ResourceObject;
+    hidden [PSObject] $MgResourceObject;
     #static [int] $InactiveDaysLimit = 180; #BUGBUG: statics ok? (in-session tenant change?)
     Device([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
         $objId = $svtResource.ResourceId
-        $this.ResourceObject = Get-AzureADDevice -ObjectId $objId
+        $this.ResourceObject = Get-MgDevice -DeviceId $objId
     }
 
-    hidden [PSObject] GetResourceObject()
+    hidden [PSObject] GetMgResourceObject()
     {
-        return $this.ResourceObject;
+        return $this.MgResourceObject;
     }
 
     hidden [ControlResult] CheckStaleDevices([ControlResult] $controlResult)
 	{
-        $d = $this.GetResourceObject()
+        $d = $this.GetMgResourceObject()
 
         $lastLoginDateTime = $d[0].ApproximateLastLogonTimeStamp 
         $inactiveDaysLimit = $this.ControlSettings.Device.InactiveDeviceLimitInDays;
