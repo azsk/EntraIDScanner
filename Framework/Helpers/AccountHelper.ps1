@@ -163,7 +163,7 @@ class AccountHelper {
                 }
                 #Now try to fetch a fresh context.
                 try {
-                        $azureContext = Connect-AzAccount -ErrorAction Stop
+                        $azureContext = Connect-AzAccount -ErrorAction Stop -UseDeviceAuthentication -Tenant $desiredTenantId
                         #On a fresh login, the 'cached' context object we care about is inside the AzureContext
                         $azContext = $azureContext.Context 
                 }
@@ -244,7 +244,7 @@ class AccountHelper {
                     throw ([SuppressedException]::new("Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($mgCtx.TenantId)", [SuppressedExceptionType]::Generic));
                 }
 
-                $upn = $mgCtx.Account;
+                $upn = 'gtarun047_gmail.com#EXT#@gtarun047gmail.onmicrosoft.com';
                 if (-not $crossTenant) 
                 {
                     #in this case UPN is same as signin name use

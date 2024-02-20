@@ -49,8 +49,8 @@
 
     # Modules that must be imported into the global environment prior to importing this module
     RequiredModules        = @(
-            @{ModuleName = 'Az.Accounts'; RequiredVersion = '2.15.1'}
-            @{ModuleName = 'Az.Resources'; RequiredVersion = '6.15.1'}
+            @{ModuleName = 'Az.Accounts'; RequiredVersion = '2.12.1'}
+            @{ModuleName = 'Az.Resources'; RequiredVersion = '2.0.1'}
             @{ModuleName = 'Microsoft.Graph.Applications'; RequiredVersion = '2.12.0'}
             @{ModuleName = 'Microsoft.Graph.Users'; RequiredVersion = '2.12.0'}
             @{ModuleName = 'Microsoft.Graph.Groups'; RequiredVersion = '2.12.0'}
