@@ -97,12 +97,11 @@ class AppRegistration: SVTBase {
         $totalRedirectUris += $app.Web.RedirectUris
         $totalRedirectUris += $app.PublicClient.RedirectUris
 
-        
+        $nonHttpURLs = @()
         if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
             $verificationResult = $true
         }
         else {
-            $nonHttpURLs = @()
             foreach ($url  in $totalRedirectUris) {
                 if ($url.tolower().startswith("http:")) {
                     $nonHttpURLs += $url
@@ -123,7 +122,8 @@ class AppRegistration: SVTBase {
         }
         else {
             $controlResult.AddMessage([VerificationResult]::Failed,
-                "Found one or more non-HTTPS URLs in replyURLs.", "(TODO) Please review and change them to HTTPS.");
+                "Found one or more non-HTTPS URLs in replyURLs.", 
+                "(TODO) Please review and change them to HTTPS. List of non-HTTPS URLs: $($nonHttpURLs -join ',')");
         }
 
         return $controlResult;
