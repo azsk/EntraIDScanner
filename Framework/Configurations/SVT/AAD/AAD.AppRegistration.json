@@ -186,7 +186,7 @@
       "Automated": "Yes",
       "MethodName": "CheckImplicitFlowIsNotUsed",
       "Rationale": "Using implicit flow, exposes the access token in the URL fragment, and does not support PKCE, making it vulnerable to access token leage and token replay attacks.",
-      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Disable access tokens used for implicit flows.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Proceed to Authentication settings under Manage. --> 4. Disable access tokens used for implicit flows.",
       "Tags": [
         "SDL",
         "TCP",
@@ -284,13 +284,13 @@
     },
     {
       "ControlID": "EntraID_AppRegistration_AuthZ_Enable_App_Instance_Lock",
-      "Description": "Multi-tenant apps should have app instance lock enabled on all properties.",
+      "Description": "Enable app instance lock for multi-tenant apps on all properties.",
       "Id": "App270",
       "ControlSeverity": "High",
       "Automated": "Yes",
       "MethodName": "CheckAppInstanceLock",
       "Rationale": "App instance property lock prevents owners of Enterprise Applications in other tenants from creating credentials of the SPN. The credentials can allow misuse of SPNs to gain unauthorized access to critical Enterprise data.",
-      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Enable app instance property lock.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Proceed to Authentication settings under Manage. -->  4. Under advanced settings, enable app instance property lock and select all properties from the dropdown.",
       "Tags": [
         "SDL",
         "TCP",
