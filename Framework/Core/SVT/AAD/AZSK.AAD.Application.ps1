@@ -14,7 +14,6 @@ class AppRegistration: SVTBase {
         $objId = $svtResource.ResourceId
         $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
         $this.MgResouceObject = Get-MgApplication -ApplicationId $objId;
-        # $this.MgResouceObject = Get-MgApplication -Filter -Search '"DisplayName:EntraID"';
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
         $this.AppOwners = [array] (Get-AzureADApplicationOwner -ObjectId $objId)
@@ -75,7 +74,7 @@ class AppRegistration: SVTBase {
         $app = $this.GetResourceObject()
         $appName = $app.DisplayName
 
-        if ($appName -eq $null -or -not ($appName -imatch $demoAppsRegex)) {
+        if ($null -eq $appName -or -not ($appName -imatch $demoAppsRegex)) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No demo/test/pilot apps found.");
         }
@@ -99,7 +98,7 @@ class AppRegistration: SVTBase {
         $totalRedirectUris += $app.PublicClient.RedirectUris
 
         
-        if ($totalRedirectUris -eq $null -or $totalRedirectUris.Count -eq 0) {
+        if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
             $verificationResult = $true
         }
         else {
@@ -166,7 +165,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckImplicitFlowIsNotUsed([ControlResult] $controlResult) {
-        $app = $this.GetMgResourceObject()
+        $app = $this.GetResourceObject()
         if ($app.Oauth2AllowImplicitFlow -eq $true) {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 "Implicit Authentication flow is enabled for app [$($app.DisplayName)].");
