@@ -183,8 +183,8 @@ class Constants
 		if(-not [string]::IsNullOrWhiteSpace($moduleName))
 		{
 			[Constants]::AzSKModuleName = $moduleName.Replace("azsk","AzSK");
-			[Constants]::AzSKAppFolderPath = [Environment]::GetFolderPath("LocalApplicationData") + "\Microsoft\" + [Constants]::AzSKModuleName
-			[Constants]::AzSKTempFolderPath = $env:TEMP + "\" + [Constants]::AzSKModuleName + "\"
+			[Constants]::AzSKAppFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft" $([Constants]::AzSKModuleName));
+			[Constants]::AzSKTempFolderPath = (Join-Path $([System.IO.Path]::GetTempPath())  $([Constants]::AzSKModuleName));
 		}
 	}
 	static [void] SetAzSKCurrentModuleVersion($moduleVersion)
