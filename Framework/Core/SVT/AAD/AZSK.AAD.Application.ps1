@@ -154,8 +154,9 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckImplicitFlowIsNotUsed([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
-        if ($app.Oauth2AllowImplicitFlow -eq $true) {
+        $app = $this.GetMgResourceObject()
+        
+        if ($app.Web.ImplicitGrantSettings.EnableAccessTokenIssuance -eq $true) {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 "Implicit Authentication flow is enabled for app [$($app.DisplayName)].");
         }
@@ -444,13 +445,17 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckAppInstanceLock([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject();
-        if ( ($app.AvailableToOtherTenants -eq $true) -or
-        (-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg"))
+        $app = $this.GetMgResourceObject();
+
+        # Check if the app's sign-in audience is not AzureADMyOrg which would mean only users in the given tenant can use the app
+        if ((-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg"))
         {
             try
             {
+                # Invoke Graph API to retrieve app information
                 $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $this.ResourceObject.AppId)
+
+                # Check if app instance lock property is enabled for all properties
                 if($null -ne $appAPIObj.servicePrincipalLockConfiguration -and $appAPIObj.servicePrincipalLockConfiguration.isEnabled -and $appAPIObj.servicePrincipalLockConfiguration.allProperties)
                 {
                     $controlResult.AddMessage([VerificationResult]::Passed,
@@ -464,6 +469,7 @@ class AppRegistration: SVTBase {
             }
             catch
             {
+                # Add error message if unable to determine app instance lock property
                 $controlResult.AddMessage([VerificationResult]::Error,
                 [MessageData]::new("Could not determine app instance lock property of app [$($app.DisplayName)]."));
             }
@@ -471,6 +477,7 @@ class AppRegistration: SVTBase {
         }
         else
         {
+            # Add passed message if app is limited to current enterprise tenant
             $controlResult.AddMessage([VerificationResult]::Passed,
             [MessageData]::new("App [$($app.DisplayName)] is limited to current enterprise tenant."));
         }
