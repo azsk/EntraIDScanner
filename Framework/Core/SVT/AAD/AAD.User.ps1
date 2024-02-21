@@ -1,22 +1,22 @@
 Set-StrictMode -Version Latest 
 class User: SVTBase
 {    
-    hidden [PSObject] $ResourceObject;
+    hidden [PSObject] $MgResourceObject;
 
     User([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
         $objId = $svtResource.ResourceId
-        $this.ResourceObject = Get-AzureADUser -ObjectId $objId    
+        $this.MgResourceObject = Get-MgUser -UserId $objId    
     }
 
-    hidden [PSObject] GetResourceObject()
+    hidden [PSObject] GetMgResourceObject()
     {
-        return $this.ResourceObject;
+        return $this.MgResourceObject;
     }
 
     hidden [ControlResult] CheckPasswordExpiration([ControlResult] $controlResult)
 	{
-        $u = $this.GetResourceObject();
+        $u = $this.GetMgResourceObject();
         $pp = $u.PasswordPolicies
         if($pp -ne $null -and $pp -match 'DisablePasswordExpiration' ) 
         {
@@ -33,7 +33,7 @@ class User: SVTBase
 
     hidden [ControlResult] CheckStrongPassword([ControlResult] $controlResult)
 	{
-        $u = $this.GetResourceObject();
+        $u = $this.GetMgResourceObject();
         $pp = $u.PasswordPolicies
         if($pp -ne $null -and $pp -match 'DisableStrongPassword' ) 
         {
@@ -51,7 +51,7 @@ class User: SVTBase
 
     hidden [ControlResult] CheckUserDirSyncSetting([ControlResult] $controlResult)
 	{
-        $u = $this.GetResourceObject();
+        $u = $this.GetMgResourceObject();
 
         #Flag users that were created 'cloud-only' if the tenant is enabled for dir-sync.
         if ( [Tenant]::IsDirectorySyncEnabled() -and (-not $u.DirSyncEnabled -eq $true)) 

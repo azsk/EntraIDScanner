@@ -1,16 +1,16 @@
 Set-StrictMode -Version Latest 
 class Group: SVTBase
 {    
-    hidden [PSObject] $ResourceObject;
+    hidden [PSObject] $MgResourceObject;
     Group([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
         $objId = $svtResource.ResourceId
-        $this.ResourceObject = Get-AzureADGroup -ObjectId $objId
+        $this.MgResourceObject = Get-MgGroup -GroupId $objId
     }
 
-    hidden [PSObject] GetResourceObject()
+    hidden [PSObject] GetMgResourceObject()
     {
-        return $this.ResourceObject;
+        return $this.MgResourceObject;
     }
 
     hidden [ControlResult] CheckGroupsIsSecurityEnabled([ControlResult] $controlResult)
@@ -32,8 +32,8 @@ class Group: SVTBase
 
     hidden [ControlResult] CheckGroupHasNonGuestOwner([ControlResult] $controlResult)
     {
-        $g = $this.GetResourceObject()
-        $go = [array] (Get-AzureADGroupOwner -ObjectId $g.ObjectId)
+        $g = $this.GetMgResourceObject()
+        $go = [array] (Get-MgGroupOwner -ObjectId $g.ObjectId)
 
         #TODO: may need more logic (e.g., can Groups or SPNs be 'Group Owners'?)
         $ret = $false

@@ -1,28 +1,21 @@
 Set-StrictMode -Version Latest 
 class EnterpriseApplication: SVTBase
 {    
-    hidden [PSObject] $ResourceObject;
     hidden [PSObject] $MgResourceObject;
     hidden [String] $SPNName;
     hidden [psobject] $RiskyPermissions;
     hidden [hashtable] $RiskyAdminConsentPermissionsCache;
     hidden [hashtable] $RiskyUserConsentPermissionsCache;
+    hidden [PSObject] $SpnOwners;
 
     EnterpriseApplication([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
-        #$this.GetResourceObject();
+        #$this.GetMgResourceObject();
         $objId = $svtResource.ResourceId
-
-        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId;
         $this.MgResourceObject = Get-MgServicePrincipal -ServicePrincipalId $objId;
-
-        $this.SPNName = $this.ResourceObject.DisplayName
+        $this.SPNName = $this.MgResourceObject.DisplayName
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAD.RiskyPermissions.json', $true);
-    }
-
-    hidden [PSObject] GetResourceObject()
-    {
-        return $this.ResourceObject;
+        $this.SpnOwners = [array] (Get-MgServicePrincipalOwnerAsUser -ServicePrincipalId $objId -Select UserType, Mail, Id, UserPrincipalName);
     }
 
     hidden [PSObject] GetMgResourceObject()
@@ -53,7 +46,7 @@ class EnterpriseApplication: SVTBase
  
     hidden [ControlResult] ReviewLegacySPN([ControlResult] $controlResult)
 	{
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         if ($spn.ServicePrincipalType -eq 'Legacy')
         {
@@ -70,7 +63,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckCertNearingExpiry([ControlResult] $controlResult)
     {
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         $spk = [array] $spn.KeyCredentials
 
@@ -115,13 +108,12 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckEnterpriseApplicationHasFTEOwnerOnly([ControlResult] $controlResult)
     {
-        $app = $this.GetResourceObject()
-
-        $owners = [array] (Get-AzureADServicePrincipalOwner -ObjectId $app.ObjectId)
+        $spn = $this.GetMgResourceObject()
+        $owners = $this.SpnOwners;
         if ($owners -eq $null -or $owners.Count -eq 0)
         {
                 $controlResult.AddMessage([VerificationResult]::Failed,
-                                        [MessageData]::new("App [$($app.DisplayName)] has no owner configured."));
+                                        [MessageData]::new("App [$($spn.DisplayName)] has no owner configured."));
         }
         elseif ($owners.Count -gt 0)
         {
@@ -139,7 +131,7 @@ class EnterpriseApplication: SVTBase
             }
             else {
                 $controlResult.AddMessage([VerificationResult]::Passed,
-                                    [MessageData]::new("All owners of the enterprise application [$($app.DisplayName)] are FTEs."));                
+                                    [MessageData]::new("All owners of the enterprise application [$($spn.DisplayName)] are FTEs."));                
             }
         }
         return $controlResult;
@@ -360,7 +352,7 @@ class EnterpriseApplication: SVTBase
     <#
         hidden [ControlResult] TBD([ControlResult] $controlResult)
         {
-            $spn = $this.GetResourceObject()
+            $spn = $this.GetMgResourceObject()
 
             if ($spn.xyz)
             {

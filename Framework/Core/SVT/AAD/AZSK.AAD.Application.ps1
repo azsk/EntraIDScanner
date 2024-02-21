@@ -12,15 +12,10 @@ class AppRegistration: SVTBase {
     AppRegistration([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) {
 
         $objId = $svtResource.ResourceId
-        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
         $this.MgResouceObject = Get-MgApplication -ApplicationId $objId;
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
-        $this.AppOwners = [array] (Get-MgApplicationOwnerAsUser -ApplicationId $objId -Select UserType, Mail, Id, UserPrincipalName)
-    }
-
-    hidden [PSObject] GetResourceObject() {
-        return $this.ResourceObject;
+        $this.AppOwners = [array] (Get-MgApplicationOwnerAsUser -ApplicationId $objId -Select UserType, Mail, Id, UserPrincipalName);
     }
 
     hidden [PsObject] GetMgResourceObject() {
@@ -71,7 +66,7 @@ class AppRegistration: SVTBase {
         $demoAppNames = $this.ControlSettings.Application.TestDemoPoCNames 
         $demoAppsRegex = [string]::Join('|', $demoAppNames) 
 
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
         $appName = $app.DisplayName
 
         if ($null -eq $appName -or -not ($appName -imatch $demoAppsRegex)) {
@@ -131,7 +126,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckHomePageIsHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ((-not [String]::IsNullOrEmpty($app.HomePage)) -and $app.Homepage.ToLower().startswith('http:')) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -151,7 +146,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckLogoutURLIsHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ((-not [String]::IsNullOrEmpty($app.LogoutUrl)) -and $app.LogoutURL.ToLower().startswith('http:')) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -180,7 +175,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckPrivacyDisclosure([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ([String]::IsNullOrEmpty($app.InformationalUrls.Privacy) -or (-not ($app.InformationalUrls.Privacy -match [Constants]::RegExForValidURL))) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -211,7 +206,7 @@ class AppRegistration: SVTBase {
 
     
     hidden [ControlResult] CheckOrphanedApp([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -225,7 +220,7 @@ class AppRegistration: SVTBase {
     }
     
     hidden [ControlResult] CheckAppFTEOwner([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -481,7 +476,7 @@ class AppRegistration: SVTBase {
             try
             {
                 # Invoke Graph API to retrieve app information
-                $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $this.ResourceObject.AppId)
+                $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $app.AppId)
 
                 # Check if app instance lock property is enabled for all properties
                 if($null -ne $appAPIObj.servicePrincipalLockConfiguration -and $appAPIObj.servicePrincipalLockConfiguration.isEnabled -and $appAPIObj.servicePrincipalLockConfiguration.allProperties)
