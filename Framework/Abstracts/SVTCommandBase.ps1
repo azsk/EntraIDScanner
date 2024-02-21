@@ -200,7 +200,7 @@ class SVTCommandBase: CommandBase {
 		#This has been added to improve the performarnce of scan commands
         #Telemetry will be re-enabled once scan is completed
        # BUGBUG  Write-Warning("Disabling AzureRm/Az telemetry - investigate why needed?")		
-		$dataCollectionPath = (Join-Path $([Environment]::GetFolderPath("ApplicationData")) "Windows Azure Powershell" "AzurePSDataCollectionProfile.json");
+		$dataCollectionPath = ([System.IO.Path]::Combine($([Environment]::GetFolderPath("ApplicationData")),"Windows Azure Powershell","AzurePSDataCollectionProfile.json"));
 		if(Test-Path -Path $dataCollectionPath)
 		{
 			$dataCollectionProfile = Get-Content -path $dataCollectionPath | ConvertFrom-Json
