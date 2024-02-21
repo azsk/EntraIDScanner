@@ -372,6 +372,21 @@ class AccountHelper {
         return [AccountHelper]::currentMgContext
     }
 
+    static [void] RefreshMgContextToken()
+    {
+        if (-not [AccountHelper]::currentMgContext)
+        {
+            throw ([SuppressedException]::new("Cannot call this method before getting a sign-in context!", [SuppressedExceptionType]::InvalidOperation))
+        }
+
+        if (-not [AccountHelper]::GraphAccessToken -or [AccountHelper]::GraphAccessToken.ExpiresOn.UtcDateTime -le [DateTime]::UtcNow)
+        {
+            $graphToken = ConvertTo-SecureString ([AccountHelper]::GetGraphToken().Token) -AsPlainText -Force;
+            Connect-MgGraph -AccessToken $graphToken -NoWelcome;
+            [AccountHelper]::currentMgContext = Get-MgContext;
+        }
+    }
+
     static [string] GetCurrentTenantInfo()
     {
         return [AccountHelper]::tenantInfoMsg

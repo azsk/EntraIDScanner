@@ -561,6 +561,7 @@ class SVTBase: AzSKRoot
         }
         else
         {
+			[AccountHelper]::RefreshMgContextToken();
 			$azskScanResult = $this.CreateControlResult($controlItem.FixControl);
             try
             {

@@ -27,7 +27,7 @@ class AADResourceResolver: Resolver
         }
         $this.scanTenant = $bScanTenant
         #TODO: See if we can read this from some settings file.
-        $this.BatchThreshold = 5000;
+        $this.BatchThreshold = 999;
         $this.hardStopLimit = 15000; 
     }
 
@@ -145,11 +145,11 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $appObjects = [array] (Get-MgApplication -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
+                    $appObjects = [array] (Get-MgApplication -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $appObjects = [array] (Get-MgApplication -Top $this.MaxObjectsToScan);
+                    $appObjects = [array] (Get-MgApplication -Top $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
             }
             else {
@@ -181,11 +181,11 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $spnObjects = [array] (Get-MgServicePrincipal -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
+                    $spnObjects = [array] (Get-MgServicePrincipal -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $spnObjects = [array] (Get-MgServicePrincipal -Top $this.MaxObjectsToScan);
+                    $spnObjects = [array] (Get-MgServicePrincipal -Top $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
             }
             else {
@@ -216,11 +216,11 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $deviceObjects = [array] (Get-MgDevice -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
+                    $deviceObjects = [array] (Get-MgDevice -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $deviceObjects = [array] (Get-MgDevice -Top $this.MaxObjectsToScan);
+                    $deviceObjects = [array] (Get-MgDevice -Top $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
             }
             else {
@@ -259,15 +259,15 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $userObjects = [array] (Get-MgUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
+                    $userObjects = [array] (Get-MgUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $userObjects = [array] (Get-MgUser -Top $this.MaxObjectsToScan)
+                    $userObjects = [array] (Get-MgUser -Top $this.MaxObjectsToScan -Property Id, DisplayName)
                 }
             }
             else {
-                $userObjects = [array] (Get-MgUser -UserId $currUser)
+                $userObjects = [array] (Get-MgUser -UserId $currUser -Property Id, DisplayName)
             }
 
             $userTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -295,11 +295,11 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $grpObjects = [array] (Get-MgGroup -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
+                    $grpObjects = [array] (Get-MgGroup -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $grpObjects = [array] (Get-MgGroup -Top $this.MaxObjectsToScan)
+                    $grpObjects = [array] (Get-MgGroup -Top $this.MaxObjectsToScan -Property Id, DisplayName)
                 }
             }
             else {
