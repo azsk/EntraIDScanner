@@ -15,7 +15,7 @@ class Tenant: SVTBase
     hidden [PSObject] $DeviceSettings;
 
     hidden static [PSObject] $TenantDetails;
-    hidden static [bool] $isDirSyncEnabled = $false;
+    hidden static [bool] $isOnPremisesSyncEnabled = $false;
 
     Tenant([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
@@ -28,8 +28,8 @@ class Tenant: SVTBase
 
         if ([Tenant]::TenantDetails -eq $null)
         {
-            [Tenant]::TenantDetails = Get-AzureADTenantDetail
-            [Tenant]::isDirSyncEnabled = [Tenant]::TenantDetails.DirSyncEnabled
+            [Tenant]::TenantDetails = Get-MgOrganization
+            [Tenant]::isOnPremisesSyncEnabled = [Tenant]::TenantDetails.OnPremisesSyncEnabled
         }
 
         if ($this.AADPermissions -eq $null)
@@ -104,10 +104,10 @@ class Tenant: SVTBase
         #We need to check this because it may not get set if tenant controls are not being scanned.
         if ([Tenant]::TenantDetails -eq $null)
         {
-            [Tenant]::TenantDetails = Get-AzureADTenantDetail
-            [Tenant]::isDirSyncEnabled = [Tenant]::TenantDetails.DirSyncEnabled
+            [Tenant]::TenantDetails = Get-MgOrganization
+            [Tenant]::isOnPremisesSyncEnabled = [Tenant]::TenantDetails.OnPremisesSyncEnabled
         }
-        return [Tenant]::isDirSyncEnabled
+        return [Tenant]::isOnPremisesSyncEnabled
     }
 
     [ControlItem[]] ApplyServiceFilters([ControlItem[]] $controls)
@@ -350,12 +350,12 @@ class Tenant: SVTBase
     hidden [ControlResult] CheckEnoughGlobalAdmins([ControlResult] $controlResult)
 	{
 
-        $ca = Get-AzureAdDirectoryRole -Filter "DisplayName eq 'Company Administrator'"
+        $ca = Get-MgDirectoryRole -Filter "DisplayName eq 'Company Administrator'"
         $rm = @()
 
         try 
         {
-            $rm = @(Get-AzureADDirectoryRoleMember -ObjectId $ca.ObjectId)
+            $rm = @(Get-MgDirectoryRoleMember -ObjectId $ca.ObjectId)
         }
         catch 
         {
@@ -386,12 +386,12 @@ class Tenant: SVTBase
         #TODO: Move this to common/.ctor similar to API calls.
         #TODO: Expand this to other privileged roles (Security Admin, etc. - see AccountHelper)
         #TODO: This and other RBAC checks should cover PIM-eligible members.
-        $ca = Get-AzureAdDirectoryRole -Filter "DisplayName eq 'Company Administrator'"
+        $ca = Get-MgDirectoryRole -Filter "DisplayName eq 'Company Administrator'"
         $rm = @()
 
         try 
         {
-            $rm = @(Get-AzureADDirectoryRoleMember -ObjectId $ca.ObjectId)
+            $rm = @(Get-MgDirectoryRoleMember -ObjectId $ca.ObjectId)
         }
         catch 
         {

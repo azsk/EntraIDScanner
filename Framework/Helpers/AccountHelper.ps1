@@ -39,6 +39,7 @@ class AccountHelper {
     static hidden [PSObject] $currentAADContext;
     static hidden [PSObject] $currentAzContext;
     static hidden [PSObject] $currentRMContext;
+    static hidden [PSObject] $currentMgContext;
     static hidden [PSObject] $AADAPIAccessToken;
     static hidden [PSObject] $GraphAccessToken;
 
@@ -47,6 +48,7 @@ class AccountHelper {
     static hidden [string] $tenantInfoMsg; 
 
     static hidden [PSObject] $currentAADUserObject;
+    static hidden [PSObject] $currentMgUserObject;
 
     static hidden [CommandType] $ScanType;
 
@@ -93,26 +95,29 @@ class AccountHelper {
 
     hidden static [PSObject] GetCurrentAzContext()
     {
-        if ([AccountHelper]::currentAzContext -eq $null)
+        if ($null -eq [AccountHelper]::currentAzContext)
         {
             throw ([SuppressedException]::new(("Cannot call this method before getting a sign-in context!"), [SuppressedExceptionType]::InvalidOperation))
         }
         return [AccountHelper]::currentAzContext
     }
 
-    hidden static [void] ClearTenantContext()
+    hidden static [void] ClearTenantContext($clearAADInfo)
     {
-        [AccountHelper]::currentAADContext = $null;
+        if ($clearAADInfo)
+        {
+            [AccountHelper]::currentAADContext = $null;
+            [AccountHelper]::AADAPIAccessToken = $null;
+            [AccountHelper]::currentAADUserObject = $null;
+        }
         [AccountHelper]::currentAzContext = $null;
         [AccountHelper]::currentRMContext = $null;
-        [AccountHelper]::AADAPIAccessToken = $null;
         [AccountHelper]::GraphAccessToken = $null;
         [AccountHelper]::tenantInfoMsg = $null;
-
-        [AccountHelper]::currentAADUserObject = $null;
-        
         [AccountHelper]::UserAADPrivRoles = [PrivilegedAADRoles]::None; 
-        [AccountHelper]::rolesLoaded = $false;    
+        [AccountHelper]::rolesLoaded = $false; 
+        [AccountHelper]::currentMgContext = $null;
+        [AccountHelper]::currentMgUserObject = $null;
     }
     
     hidden static [PSObject] GetGraphToken()
@@ -138,11 +143,10 @@ class AccountHelper {
         }
 
         return [AccountHelper]::GraphAccessToken        
-
     }
 
     # Can be called with $null (when tenantId is not specified by the user)
-    hidden static [PSObject] GetCurrentAzContext($desiredTenantId)
+    hidden static [PSObject] GetCurrentAzContext($desiredTenantId, $interactive)
     {
         if(-not [AccountHelper]::currentAzContext)
         {
@@ -159,7 +163,14 @@ class AccountHelper {
                 }
                 #Now try to fetch a fresh context.
                 try {
-                        $azureContext = Connect-AzAccount -ErrorAction Stop
+                        if ($interactive -eq $true)
+                        {
+                            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId;
+                        }
+                        else
+                        {
+                            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId -UseDeviceAuthentication;
+                        }
                         #On a fresh login, the 'cached' context object we care about is inside the AzureContext
                         $azContext = $azureContext.Context 
                 }
@@ -173,97 +184,101 @@ class AccountHelper {
         return [AccountHelper]::currentAzContext
     }
 
-    hidden static [PSObject] GetCurrentAADContext()
+    hidden static [PSObject] GetCurrentMgContext()
     {
-        if ([AccountHelper]::currentAADContext -eq $null)
+        # TODO: Remove this method once migration to microsoft graph is complete
+        if ($null -eq [AccountHelper]::currentMgContext)
         {
             throw ([SuppressedException]::new(("Cannot call this method before getting a sign-in context!"), [SuppressedExceptionType]::InvalidOperation))
         }
-        return [AccountHelper]::currentAADContext
+        return [AccountHelper]::currentMgContext;
     }
 
-    hidden static [PSObject] GetCurrentAADContext($desiredTenantId) #Can be $null if user did not pass one.
+    hidden static [PSObject] GetCurrentMgContext($desiredTenantId) #Can be $null if user did not pass one.
     {
-        $currAADCtx = [AccountHelper]::currentAADContext
+        $currMgCtx = [AccountHelper]::currentMgContext;
 
-        # If we don't have a context *or* the context does not match a non-null desired tenant
-        if(-not $currAADCtx -or (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $currAADCtx.TenantID))
+        if(-not $currMgCtx -or (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $currMgCtx.TenantId))
         {
-            [AccountHelper]::ClearTenantContext()
+            #TODO: Cleanup method call post migration to graph.
+            [AccountHelper]::ClearTenantContext($false);
 
-            $aadContext = $null
-            $aadUserObj = $null
+            $mgCtx = $null;
+            $mgUserObj = $null;
             #Try leveraging Azure context if available
             try {
-                $tenantId = $null
-                $crossTenant = $false
-                $accountId = $null
+                $tenantId = $null;
+                $crossTenant = $false;
 
                 if (-not [string]::IsNullOrEmpty($desiredTenantId))
                 {
-                    $tenantId = $desiredTenantId
+                    $tenantId = $desiredTenantId;
                 }
 
-                $azContext = $null
+                $azContext = $null;
                 try {
                     #Either throws or returns non-null
-                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId)
-                    $accountId = $azContext.Account.Id    
+                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId, $true);
                 }
                 catch {
-                    Write-Warning "Could not acquire Azure context. Falling back to Connect-AzureAD..."
+                    Write-Warning "Could not acquire Azure context interactively, will fallback to device mode";
+                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId, $false);
                 }
                 
-                if ($azContext -ne $null -and $azContext.Tenant -ne $null) #Can be $null when a user has no Azure subscriptions.
+                if ($null -ne $azContext -and $null -ne $azContext.Tenant) #Can be $null when a user has no Azure subscriptions.
                 {
-                    $nativeTenantId = $azContext.Tenant.Id
-                    if ($tenantId -eq $null) #No 'desired tenant' passed in by user
+                    $nativeTenantId = $azContext.Tenant.Id;
+                    if ($null -eq $tenantId) #No 'desired tenant' passed in by user
                     {
-                        $tenantId = $nativeTenantId
+                        $tenantId = $nativeTenantId;
                     }
                     else
                     {
                         #Check if desiredTenant and native tenant are diff => this user is guest in the desired tenant
                         if ($nativeTenantId -ne $desiredTenantId)
                         {
-                            $crossTenant = $true
+                            $crossTenant = $true;
                         }
                     }
                 }
 
-                $aadContext = $null
-                if (-not [string]::IsNullOrEmpty($tenantId) -and -not [string]::IsNullOrEmpty($accountId))
+                $graphToken = ConvertTo-SecureString ([AccountHelper]::GetGraphToken().Token) -AsPlainText -Force;
+                Disconnect-MgGraph;
+                Connect-MgGraph -AccessToken $graphToken -NoWelcome;
+                $mgCtx = Get-MgContext;
+
+                if (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $mgCtx.TenantId)
                 {
-                    $aadContext = Connect-AzureAD -TenantId $tenantId -AccountId $accountId -ErrorAction Stop
-                }
-                elseif (-not [string]::IsNullOrEmpty($accountId)) 
-                {
-                    $aadContext = Connect-AzureAd -AccountId $accountId -ErrorAction Stop
-                    $tenantId = $aadContext.TenantId
-                }
-                else {
-                    $aadContext = Connect-AzureAd -ErrorAction Stop
-                    $tenantId = $aadContext.TenantId
+                    Write-Error "Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($mgCtx.TenantId).`r`nYou may have mistyped the value of 'tenantId' parameter. Please try again!";
+                    throw ([SuppressedException]::new("Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($mgCtx.TenantId)", [SuppressedExceptionType]::Generic));
                 }
 
-                if (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $aadContext.TenantID)
+                $upn = $mgCtx.Account;
+
+                if ($null -eq $upn)
                 {
-                    Write-Error "Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($aadContext.TenantId).`r`nYou may have mistyped the value of 'tenantId' parameter. Please try again!"
-                    throw ([SuppressedException]::new("Mismatch between desired tenantId: $desiredTenantId and tenantId from login context: $($aadContext.TenantId)", [SuppressedExceptionType]::Generic))
+                    # UPN is null for personal microsoft accounts
+                    $upn = $azContext.Account.Id;
                 }
 
-                $upn = $aadContext.Account.Id
                 if (-not $crossTenant) 
                 {
-                    #in this case UPN is same as signin name use
-                    $aadUserObj = Get-AzureADUser -Filter "UserPrincipalName eq '$upn'"
+                    #Try direct match first
+                    $mgUserObj = Get-MgUser -Filter "UserPrincipalName eq '$upn'";
                 }
-                else 
+
+                if ($null -eq $mgUserObj)
                 {
+                    # Personal microsoft accounts also have user_mail@user_mail.onmicrosoft.com
                     #Cross-tenant, UPN is the mangled version e.g., joe_contoso.com#desiredtenant.com
                     $upnx = (($upn -replace '@', '_')+'#')
-                    $filter = "startswith(UserPrincipalName,'" + $upnx + "')"
-                    $aadUserObj = Get-AzureAdUser -Filter $filter
+                    $filter = "startswith(UserPrincipalName,'" + $upnx + "')";
+                    $mgUserObj = Get-MgUser -Filter $filter;
+                }
+
+                if ($null -eq $mgUserObj)
+                {
+                    throw ([SuppressedException]::new("Could not find the user in the provided tenant, are you sure the right tenant id is passed?`n$_", [SuppressedExceptionType]::Generic))
                 }
             }
             catch {
@@ -271,12 +286,27 @@ class AccountHelper {
             }
 
             [AccountHelper]::ScanType = [CommandType]::AAD
-            [AccountHelper]::currentAADContext = $aadContext
-            [AccountHelper]::currentAADUserObject = $aadUserObj
-            [AccountHelper]::tenantInfoMsg = "AAD Tenant Info: `n`tDomain: $($aadContext.TenantDomain)`n`tTenantId: $($aadContext.TenantId)"
+            [AccountHelper]::currentMgContext = $mgCtx
+            [AccountHelper]::currentMgUserObject = $mgUserObj
+            [AccountHelper]::tenantInfoMsg = "AAD Tenant Info: `n`tTenantId: $($mgCtx.TenantId)"
         }
 
-        return [AccountHelper]::currentAADContext
+        return [AccountHelper]::currentMgContext
+    }
+
+    static [void] RefreshMgContextToken()
+    {
+        if (-not [AccountHelper]::currentMgContext)
+        {
+            throw ([SuppressedException]::new("Cannot call this method before getting a sign-in context!", [SuppressedExceptionType]::InvalidOperation))
+        }
+
+        if (-not [AccountHelper]::GraphAccessToken -or [AccountHelper]::GraphAccessToken.ExpiresOn.UtcDateTime -le [DateTime]::UtcNow)
+        {
+            $graphToken = ConvertTo-SecureString ([AccountHelper]::GetGraphToken().Token) -AsPlainText -Force;
+            Connect-MgGraph -AccessToken $graphToken -NoWelcome;
+            [AccountHelper]::currentMgContext = Get-MgContext;
+        }
     }
 
     static [string] GetCurrentTenantInfo()
@@ -286,7 +316,7 @@ class AccountHelper {
 
     static [string] GetCurrentSessionUser() 
     {
-        $context = [AccountHelper]::GetCurrentAADContext() 
+        $context = [AccountHelper]::GetCurrentMgContext(); 
         if ($null -ne $context) {
             return $context.Account.Id
         }
@@ -297,18 +327,18 @@ class AccountHelper {
 
     static [string] GetCurrentSessionUserObjectId() 
     {
-        return ([AccountHelper]::GetCurrentAADUserObject()).ObjectId;
+        return ([AccountHelper]::GetCurrentMgUserObject()).Id;
     }
 
-    hidden static [PSObject] GetCurrentAADUserObject()
+    hidden static [PSObject] GetCurrentMgUserObject()
     {
-        return [AccountHelper]::currentAADUserObject   
+        return [AccountHelper]::currentMgUserObject;   
     }
 
     hidden static [PSObject] GetEnabledPrivRolesInTenant()
     {
         #Get subset of directory level roles that have been enabled in this tenant. (Not orgs enable all roles.)
-        $enabledDirRoles = [array] (Get-AzureADDirectoryRole)
+        $enabledDirRoles = [array] (Get-MgDirectoryRole)
 
         #$srRole = $activeRoles | ? { $_.DisplayName -eq "Security Reader"}
         
@@ -319,19 +349,19 @@ class AccountHelper {
             switch ($ar.DisplayName)
             {
                 'Security Reader' { 
-                    $apr += New-PrivRole -DisplayName 'Security Reader' -ObjectId $ar.ObjectId -AADPrivRole ([PrivilegedAADRoles]::SecurityReader)
+                    $apr += New-PrivRole -DisplayName 'Security Reader' -ObjectId $ar.Id -AADPrivRole ([PrivilegedAADRoles]::SecurityReader)
                 }
         
                 'User Account Administrator' { 
-                    $apr += New-PrivRole -DisplayName 'User Account Administrator' -ObjectId $ar.ObjectId -AADPrivRole ([PrivilegedAADRoles]::UserAccountAdmin)
+                    $apr += New-PrivRole -DisplayName 'User Account Administrator' -ObjectId $ar.Id -AADPrivRole ([PrivilegedAADRoles]::UserAccountAdmin)
                 }
                  
                 'Security Administrator' {
-                    $apr += New-PrivRole -DisplayName 'Security Administrator' -ObjectId $ar.ObjectId -AADPrivRole ([PrivilegedAADRoles]::SecurityAdmin)
+                    $apr += New-PrivRole -DisplayName 'Security Administrator' -ObjectId $ar.Id -AADPrivRole ([PrivilegedAADRoles]::SecurityAdmin)
                 }
         
                 'Company Administrator' {
-                    $apr += New-PrivRole -DisplayName 'Company Administrator' -ObjectId $ar.ObjectId -AADPrivRole ([PrivilegedAADRoles]::CompanyAdmin)
+                    $apr += New-PrivRole -DisplayName 'Company Administrator' -ObjectId $ar.Id -AADPrivRole ([PrivilegedAADRoles]::CompanyAdmin)
                 }
             }
         }
@@ -349,11 +379,11 @@ class AccountHelper {
             $apr | % {
                 $pr = $_
                 #Write-Host "$pr.AADPrivRole"
-                $roleMembers = [array] (Get-AzureADDirectoryRoleMember -ObjectId $pr.ObjectId)
+                $roleMembers = [array] (Get-MgDirectoryRoleMember -DirectoryRoleId $pr.ObjectId)
                 #Write-Host "Count: $($roleMembers.Count)"
                 if($roleMembers)
                 {
-                    $roleMembers | % { if ($_.ObjectId -eq $uid) {$upr = $upr -bor $pr.AADPrivRole}}
+                    $roleMembers | % { if ($_.Id -eq $uid) {$upr = $upr -bor $pr.AADPrivRole}}
                 }
                 
             }    
@@ -368,7 +398,7 @@ class AccountHelper {
     #Note: #TODO: This does not check for PIM-based role membership yet.
     static [bool] IsUserInAPermanentAdminRole()
     {
-        $uid = ([AccountHelper]::GetCurrentAADUserObject()).ObjectId
+        $uid = ([AccountHelper]::GetCurrentMgUserObject()).Id
         $upr = [AccountHelper]::GetUserPrivTenantRoles($uid)
         return ($upr -ne [PrivilegedAADRoles]::None) 
     }
@@ -392,7 +422,7 @@ class AccountHelper {
                     $tenantId = $azContext.Tenant.Id
                 }
                 else {
-                    $tenantId = ([AccountHelper]::GetCurrentAADContext()).TenantId 
+                    $tenantId = ([AccountHelper]::GetCurrentMgContext()).TenantId 
                 }
                 $apiToken = [Microsoft.Azure.Commands.Common.Authentication.AzureSession]::Instance.AuthenticationFactory.Authenticate($azContext.Account, $azContext.Environment, $tenantId, $null, "Never", $null, $AADAPIGuid)
             }

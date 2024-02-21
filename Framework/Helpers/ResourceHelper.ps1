@@ -5,10 +5,10 @@
     static [array] FetchResourcesByObjectIdsAndCache($objectIds)
     {
         $objectIdsToFetch = @($objectIds | Get-Unique | Where-Object { -not [ResourceHelper]::Cache.ContainsKey($_) });
-        $resources = Get-AzureADObjectByObjectId -ObjectIds $objectIdsToFetch;
+        $resources = Get-MgDirectoryObjectById -Ids $objectIdsToFetch;
         foreach ($resource in $resources)
         {
-            [ResourceHelper]::Cache[$resource.ObjectId] = $resource;
+            [ResourceHelper]::Cache[$resource.Id] = $resource;
         }
         return @($objectIds | ForEach-Object { [ResourceHelper]::Cache[$_]; });
     }

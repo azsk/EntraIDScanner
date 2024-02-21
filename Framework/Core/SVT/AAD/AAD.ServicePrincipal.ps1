@@ -1,30 +1,31 @@
 Set-StrictMode -Version Latest 
 class EnterpriseApplication: SVTBase
 {    
-    hidden [PSObject] $ResourceObject;
+    hidden [PSObject] $MgResourceObject;
     hidden [String] $SPNName;
     hidden [psobject] $RiskyPermissions;
     hidden [hashtable] $RiskyAdminConsentPermissionsCache;
     hidden [hashtable] $RiskyUserConsentPermissionsCache;
+    hidden [PSObject] $SpnOwners;
 
     EnterpriseApplication([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) 
     {
-        #$this.GetResourceObject();
+        #$this.GetMgResourceObject();
         $objId = $svtResource.ResourceId
-
-        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
-        $this.SPNName = $this.ResourceObject.DisplayName
+        $this.MgResourceObject = Get-MgServicePrincipal -ServicePrincipalId $objId;
+        $this.SPNName = $this.MgResourceObject.DisplayName
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAD.RiskyPermissions.json', $true);
+        $this.SpnOwners = [array] (Get-MgServicePrincipalOwnerAsUser -ServicePrincipalId $objId -Select UserType, Mail, Id, UserPrincipalName);
     }
 
-    hidden [PSObject] GetResourceObject()
+    hidden [PSObject] GetMgResourceObject()
     {
-        return $this.ResourceObject;
+        return $this.MgResourceObject;
     }
 
     hidden [ControlResult] CheckSPNPasswordCredentials([ControlResult] $controlResult)
 	{
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         if ($spn.PasswordCredentials.Count -gt 0)
         {
@@ -45,7 +46,7 @@ class EnterpriseApplication: SVTBase
  
     hidden [ControlResult] ReviewLegacySPN([ControlResult] $controlResult)
 	{
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         if ($spn.ServicePrincipalType -eq 'Legacy')
         {
@@ -62,7 +63,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckCertNearingExpiry([ControlResult] $controlResult)
     {
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
 
         $spk = [array] $spn.KeyCredentials
 
@@ -107,13 +108,12 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckEnterpriseApplicationHasFTEOwnerOnly([ControlResult] $controlResult)
     {
-        $app = $this.GetResourceObject()
-
-        $owners = [array] (Get-AzureADServicePrincipalOwner -ObjectId $app.ObjectId)
+        $spn = $this.GetMgResourceObject()
+        $owners = $this.SpnOwners;
         if ($owners -eq $null -or $owners.Count -eq 0)
         {
                 $controlResult.AddMessage([VerificationResult]::Failed,
-                                        [MessageData]::new("App [$($app.DisplayName)] has no owner configured."));
+                                        [MessageData]::new("App [$($spn.DisplayName)] has no owner configured."));
         }
         elseif ($owners.Count -gt 0)
         {
@@ -131,7 +131,7 @@ class EnterpriseApplication: SVTBase
             }
             else {
                 $controlResult.AddMessage([VerificationResult]::Passed,
-                                    [MessageData]::new("All owners of the enterprise application [$($app.DisplayName)] are FTEs."));                
+                                    [MessageData]::new("All owners of the enterprise application [$($spn.DisplayName)] are FTEs."));                
             }
         }
         return $controlResult;
@@ -139,11 +139,11 @@ class EnterpriseApplication: SVTBase
 
     hidden [hashtable] GetAdminConsentPermissions()
     {
-        $spn = $this.GetResourceObject();
+        $spn = $this.GetMgResourceObject();
         $adminConsentRiskyPermissions = @{};
 
         # Application Level Permissions
-        $applicationPermissionGrouping = (Get-AzureADServiceAppRoleAssignedTo -ObjectId $spn.ObjectId) | Group-Object -Property ResourceId;
+        $applicationPermissionGrouping = (Get-MgServicePrincipalAppRoleAssignedTo -ServicePrincipalId $spn.Id) | Group-Object -Property ResourceId;
         foreach($applicationPermissionGroup in $applicationPermissionGrouping)
         {
             foreach($permission in $applicationPermissionGroup.Group)
@@ -168,19 +168,19 @@ class EnterpriseApplication: SVTBase
             }
         }
 
-        $delegatedPermissionGrants = @(Get-AzureADServicePrincipalOauth2PermissionGrant -ObjectId $spn.ObjectId | Where-Object { $_.ConsentType -eq 'AllPrincipals' })
+        $delegatedPermissionGrants = @(Get-MgServicePrincipalOauth2PermissionGrant -ServicePrincipalId $spn.Id | Where-Object { $_.ConsentType -eq 'AllPrincipals' })
         if ($delegatedPermissionGrants.Count -eq 0)
         {
             return $adminConsentRiskyPermissions;
         }
 
-        $spns = ([ResourceHelper]::FetchResourcesByObjectIdsAndCache(($delegatedPermissionGrants| ForEach-Object { $_.ResourceId })) | Group-Object -Property ObjectId -AsHashTable);
+        $spns = ([ResourceHelper]::FetchResourcesByObjectIdsAndCache(($delegatedPermissionGrants| ForEach-Object { $_.ResourceId })) | Group-Object -Property Id -AsHashTable);
         foreach($delegatedPermissionGrant in $delegatedPermissionGrants)
         {
             $resourceId = $delegatedPermissionGrant.ResourceId;
             $scopes = [System.Collections.Generic.HashSet[string]]::new($delegatedPermissionGrant.Scope.Split(" "));
-            $riskyAdminConsentDelegatedPermissions = $spns[$resourceId].Oauth2Permissions | 
-                Where-Object { $scopes.Contains($_.Value) -and $null -ne $this.RiskyPermissions.PsObject.Properties[$_.Id]}
+            $riskyAdminConsentDelegatedPermissions = $spns[$resourceId].AdditionalProperties.oauth2PermissionScopes | 
+                Where-Object { $scopes.Contains($_.value) -and $null -ne $this.RiskyPermissions.PsObject.Properties[$_.id]}
             if ($null -eq $riskyAdminConsentDelegatedPermissions -or $riskyAdminConsentDelegatedPermissions.Count -eq 0)
             {
                 continue;
@@ -189,14 +189,14 @@ class EnterpriseApplication: SVTBase
             if (!$adminConsentRiskyPermissions.ContainsKey($resourceId))
             {
                 $adminConsentRiskyPermissions[$resourceId] = [PSCustomObject]@{
-                    Name = $spns[$resourceId].DisplayName
-                    Delegated = $riskyAdminConsentDelegatedPermissions.Value
+                    Name = $spns[$resourceId].AdditionalProperties.DisplayName
+                    Delegated = $riskyAdminConsentDelegatedPermissions.value
                     Application = [System.Collections.Generic.List[string]]::new()
                 };
             }
             else 
             {
-                $adminConsentRiskyPermissions[$resourceId].Delegated = $riskyAdminConsentDelegatedPermissions.Value;
+                $adminConsentRiskyPermissions[$resourceId].Delegated = $riskyAdminConsentDelegatedPermissions.value;
             }
         }
 
@@ -205,22 +205,22 @@ class EnterpriseApplication: SVTBase
 
     hidden [hashtable] GetUserConsentRiskyPermissions()
     {
-        $spn = $this.GetResourceObject();
+        $spn = $this.GetMgResourceObject();
         $userConsentRiskyPermissions = @{}
     
-        $delegatedPermissionGrants = @(Get-AzureADServicePrincipalOauth2PermissionGrant -ObjectId $spn.ObjectId | Where-Object { $_.ConsentType -eq 'Principal' });
+        $delegatedPermissionGrants = @(Get-MgServicePrincipalOauth2PermissionGrant -ServicePrincipalId $spn.Id | Where-Object { $_.ConsentType -eq 'Principal' });
         if ($delegatedPermissionGrants.Count -eq 0)
         {
             return $userConsentRiskyPermissions;
         }
  
-        $spns = ([ResourceHelper]::FetchResourcesByObjectIdsAndCache(($delegatedPermissionGrants| ForEach-Object { $_.ResourceId })) | Group-Object -Property ObjectId -AsHashTable);
+        $spns = ([ResourceHelper]::FetchResourcesByObjectIdsAndCache(($delegatedPermissionGrants| ForEach-Object { $_.ResourceId })) | Group-Object -Property Id -AsHashTable);
         foreach($delegatedPermissionGrant in $delegatedPermissionGrants)
         {      
             $resourceId = $delegatedPermissionGrant.ResourceId;
             $scopes = [System.Collections.Generic.HashSet[string]]::new($delegatedPermissionGrant.Scope.Split(" "));
-            $riskyUserConsentDelegatedPermissions = $spns[$resourceId].Oauth2Permissions | 
-                Where-Object { $scopes.Contains($_.Value) -and $null -ne $this.RiskyPermissions.PsObject.Properties[$_.Id]}
+            $riskyUserConsentDelegatedPermissions = $spns[$resourceId].AdditionalProperties.oauth2PermissionScopes | 
+                Where-Object { $scopes.Contains($_.value) -and $null -ne $this.RiskyPermissions.PsObject.Properties[$_.id]}
                 
             if ($null -eq $riskyUserConsentDelegatedPermissions -or $riskyUserConsentDelegatedPermissions.Count -eq 0)
             {
@@ -234,12 +234,12 @@ class EnterpriseApplication: SVTBase
                     Users = [System.Collections.Generic.HashSet[guid]]::new()
                     Delegated = [System.Collections.Generic.HashSet[string]]::new()
                 };
-                [void]$userConsentRiskyPermissions[$resourceId].Delegated.Add($riskyUserConsentDelegatedPermissions.Value);
+                [void]$userConsentRiskyPermissions[$resourceId].Delegated.Add($riskyUserConsentDelegatedPermissions.value);
                 [void]$userConsentRiskyPermissions[$resourceId].Users.Add($delegatedPermissionGrant.PrincipalId)
             }
             else 
             {
-                [void]$userConsentRiskyPermissions[$resourceId].Delegated.Add($riskyUserConsentDelegatedPermissions.Value);
+                [void]$userConsentRiskyPermissions[$resourceId].Delegated.Add($riskyUserConsentDelegatedPermissions.value);
                 [void]$userConsentRiskyPermissions[$resourceId].Users.Add($delegatedPermissionGrant.PrincipalId);
             }
         }
@@ -262,7 +262,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [void] VerifyAndReportRiskyPermissions([ControlResult] $controlResult)
     {
-        $includeUserConsentPermissions = $this.ControlSettings.ServicePrincipal.IncludeUserConsentPermissions;
+        $includeUserConsentPermissions = $this.ControlSettings.ServicePrincipal.IncludeUserConsentPermissions -or $true;
         $this.FetchAndCacheRiskyPermissions($includeUserConsentPermissions);
         if ($this.RiskyAdminConsentPermissionsCache.Count -eq 0 -and (!$includeUserConsentPermissions -or $this.RiskyUserConsentPermissionsCache.Count -eq 0))
         {
@@ -299,7 +299,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckEnterpriseAppUsesMiniminalPermissions([ControlResult] $controlResult)
     {
-        $spn = $this.GetResourceObject();
+        $spn = $this.GetMgResourceObject();
         if($spn.ServicePrincipalType -ne "Application")
         {
             $controlResult.AddMessage([VerificationResult]::Passed,
@@ -315,7 +315,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckEnterpriseMultiTenantAppUsesMiniminalPermissions([ControlResult] $controlResult)
     {
-        $spn = $this.GetResourceObject();
+        $spn = $this.GetMgResourceObject();
         if($spn.ServicePrincipalType -ne "Application")
         {
             $controlResult.AddMessage([VerificationResult]::Passed,
@@ -323,7 +323,7 @@ class EnterpriseApplication: SVTBase
             return $controlResult              
         }
     
-        if($spn.AppOwnerTenantId -eq $this.TenantContext.TenantId)
+        if($spn.AppOwnerOrganizationId -eq $this.TenantContext.TenantId)
         {
             $controlResult.AddMessage([VerificationResult]::Passed,
                                     [MessageData]::new("The enterprise application is not a cross-tenant application."));
@@ -337,7 +337,7 @@ class EnterpriseApplication: SVTBase
 
     hidden [ControlResult] CheckEnterpiseApplicationDoesNotUsePasswordCredentials([ControlResult] $controlResult)
 	{
-        $spn = $this.GetResourceObject()
+        $spn = $this.GetMgResourceObject()
         if ($spn.ServicePrincipalType -ne 'Application')
         {
             $controlResult.AddMessage([VerificationResult]::Passed,
@@ -352,7 +352,7 @@ class EnterpriseApplication: SVTBase
     <#
         hidden [ControlResult] TBD([ControlResult] $controlResult)
         {
-            $spn = $this.GetResourceObject()
+            $spn = $this.GetMgResourceObject()
 
             if ($spn.xyz)
             {

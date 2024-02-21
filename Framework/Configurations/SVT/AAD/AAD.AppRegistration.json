@@ -22,14 +22,14 @@
       "Enabled": false
     },
     {
-      "ControlID": "AAD_AppRegistration_ReturnURLs_Use_HTTPS",
-      "Description": "All return URLs configured for an application must be HTTPS endpoints",
+      "ControlID": "AAD_AppRegistration_DP_Use_HTTPS_Redirect_URI",
+      "Description": "Ensure all return URLs configured for an application to use HTTPS endpoints.",
       "Id": "App130",
       "ControlSeverity": "High",
       "Automated": "Yes",
       "MethodName": "CheckReturnURLsAreHTTPS",
-      "Rationale": "Return URLs of an application are particularly sensitive because many authentication flows involve posting the token to the returnURL after successful authentication. If such a URL does not use HTTPS, it leads to disclosure of the token on the network in clear text.",
-      "Recommendation": "Refer: TODO",
+      "Rationale": "Ensuring that return URLs for an application exclusively use HTTPS endpoints is crucial for security. During authentication flows, tokens are often transmitted to these URLs after successful authentication. If a return URL lacks HTTPS encryption, it exposes tokens to potential interception, compromising sensitive data security.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Navigate to Authentication settings under Manage. --> 4. Ensure that all return URLs configured for the application exclusively use HTTPS endpoints.",
       "Tags": [
         "SDL",
         "TCP",
@@ -163,13 +163,13 @@
     },
     {
       "ControlID": "AAD_AppRegistration_AuthZ_Do_Not_Use_Wildcards_In_Redirect_URIs",
-      "Description": "Redirect URIs should not contain wildcard characters.",
+      "Description": "Avoid the use of wildcard characters in redirect URIs.",
       "Id": "App210",
       "ControlSeverity": "High",
       "Automated": "Yes",
       "MethodName": "CheckRedirectURIsWithWilcard",
-      "Rationale": "Allowing wildcard in redirect URIs makes it easier for attackers to get auth tokens from the app by creating similar redirect URIs and phishing users to malicious URLs. For public clients this can provide attackers directly with an access token whereas for confidential apps, attackers can leverage auth code injection attacks to get an access token.",
-      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Configure all redirect URIs with wildcards to exact domains",
+      "Rationale": "Including wildcard characters in redirect URIs introduces significant security vulnerabilities. Attackers can exploit this by creating fraudulent redirect URIs resembling legitimate ones, leading to potential phishing attacks and unauthorized access to authentication tokens. In the case of public clients, this can directly grant attackers access tokens, while for confidential apps, it can enable auth code injection attacks to obtain access tokens.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Navigate to Authentication settings under Manage. --> 4. Ensure all redirect URIs are configured with exact domains instead of wildcard characters.",
       "Tags": [
         "SDL",
         "TCP",
@@ -186,7 +186,7 @@
       "Automated": "Yes",
       "MethodName": "CheckImplicitFlowIsNotUsed",
       "Rationale": "Using implicit flow, exposes the access token in the URL fragment, and does not support PKCE, making it vulnerable to access token leage and token replay attacks.",
-      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Disable access tokens used for implicit flows.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Proceed to Authentication settings under Manage. --> 4. Disable access tokens used for implicit flows.",
       "Tags": [
         "SDL",
         "TCP",
@@ -197,13 +197,13 @@
     },
     {
       "ControlID": "AAD_AppRegistration_AuthZ_Remove_Dangling_URIs",
-      "Description": "Redirect URIs should have proper DNS ownership.",
+      "Description": "Ensure redirect URIs have valid DNS ownership.",
       "Id": "App240",
       "ControlSeverity": "High",
       "Automated": "Yes",
       "MethodName": "CheckDanglingRedirectURIs",
       "Rationale": "Allowing redirect URIs with no DNS ownership allows attackers to get ownership of the URL before the actual owners, enabling them to get auth tokens by phishing users to these sites under attackers' controls.",
-      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Configure all redirect URIs and their DNS records.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Proceed to Authentication settings under Manage. --> 4. Ensure all redirect URIs are configured with valid DNS records to prevent unauthorized access.",
       "Tags": [
         "SDL",
         "TCP",
@@ -284,13 +284,13 @@
     },
     {
       "ControlID": "AAD_AppRegistration_AuthZ_Enable_App_Instance_Lock",
-      "Description": "Multi-tenant apps should have app instance lock enabled on all properties.",
+      "Description": "Enable app instance lock for multi-tenant apps on all properties.",
       "Id": "App270",
       "ControlSeverity": "High",
       "Automated": "Yes",
       "MethodName": "CheckAppInstanceLock",
       "Rationale": "App instance property lock prevents owners of Enterprise Applications in other tenants from creating credentials of the SPN. The credentials can allow misuse of SPNs to gain unauthorized access to critical Enterprise data.",
-      "Recommendation": "1. Go to App Registration. 2. Navigate to the app. 3. Go to Authentication under Manage. 4. Enable app instance property lock.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Proceed to Authentication settings under Manage. -->  4. Under advanced settings, enable app instance property lock and select all properties from the dropdown.",
       "Tags": [
         "SDL",
         "TCP",

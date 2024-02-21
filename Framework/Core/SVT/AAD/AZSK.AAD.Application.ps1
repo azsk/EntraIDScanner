@@ -1,7 +1,8 @@
 Set-StrictMode -Version Latest 
+
 class AppRegistration: SVTBase {    
     hidden [PSObject] $ResourceObject;
-
+    hidden [PSObject] $MgResouceObject;
     hidden [hashtable] $DNSCache = @{};
 
     hidden [Hashtable] $ServicePrincipalCache;
@@ -11,14 +12,14 @@ class AppRegistration: SVTBase {
     AppRegistration([string] $tenantId, [SVTResource] $svtResource): Base($tenantId, $svtResource) {
 
         $objId = $svtResource.ResourceId
-        $this.ResourceObject = Get-AzureADObjectByObjectId -ObjectIds $objId
+        $this.MgResouceObject = Get-MgApplication -ApplicationId $objId;
         $this.ServicePrincipalCache = @{}
         $this.RiskyPermissions = [Helpers]::LoadOfflineConfigFile('Azsk.AAd.RiskyPermissions.json', $true);
-        $this.AppOwners = [array] (Get-AzureADApplicationOwner -ObjectId $objId)
+        $this.AppOwners = [array] (Get-MgApplicationOwnerAsUser -ApplicationId $objId -Select UserType, Mail, Id, UserPrincipalName);
     }
 
-    hidden [PSObject] GetResourceObject() {
-        return $this.ResourceObject;
+    hidden [PsObject] GetMgResourceObject() {
+        return $this.MgResouceObject;
     }
 
     hidden [bool] IsURLDangling([string] $uri) {
@@ -39,9 +40,9 @@ class AppRegistration: SVTBase {
     {
         $secretsWithLongExpiry = [System.Collections.ArrayList]::new();
         foreach ($secret in $secrets) { 
-            if ($secret.EndDate -gt ([datetime]::UtcNow).AddDays($this.ControlSettings.Application.CredentialExpiryThresholdInDays)) {
+            if ($secret.EndDateTime -gt ([datetime]::UtcNow).AddDays($this.ControlSettings.Application.CredentialExpiryThresholdInDays)) {
                 $secretsWithLongExpiry.Add([PSCustomObject]@{
-                        ExpiryInDays = ($secret.EndDate - [datetime]::UtcNow).Days
+                        ExpiryInDays = ($secret.EndDateTime - [datetime]::UtcNow).Days
                         SecretId     = $secret.KeyId
                     })
             }
@@ -65,10 +66,10 @@ class AppRegistration: SVTBase {
         $demoAppNames = $this.ControlSettings.Application.TestDemoPoCNames 
         $demoAppsRegex = [string]::Join('|', $demoAppNames) 
 
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
         $appName = $app.DisplayName
 
-        if ($appName -eq $null -or -not ($appName -imatch $demoAppsRegex)) {
+        if ($null -eq $appName -or -not ($appName -imatch $demoAppsRegex)) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No demo/test/pilot apps found.");
         }
@@ -80,41 +81,52 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckReturnURLsAreHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
-        $ret = $false
-        if ($app.replyURLs -eq $null -or $app.replyURLs.Count -eq 0) {
-            $ret = $true
+        $app = $this.GetMgResourceObject()
+        $verificationResult = $false
+
+        # Initialize an empty array to store all redirect URIs
+        $totalRedirectUris = @()
+
+        # Concatenate arrays from each individual list into $totalRedirectUris
+        $totalRedirectUris += $app.Spa.RedirectUris
+        $totalRedirectUris += $app.Web.RedirectUris
+        $totalRedirectUris += $app.PublicClient.RedirectUris
+
+        $nonHttpURLs = @()
+        if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
+            $verificationResult = $true
         }
         else {
-            $nonHttpURLs = @()
-            foreach ($url  in $app.replyURLs) {
+            foreach ($url  in $totalRedirectUris) {
                 if ($url.tolower().startswith("http:")) {
                     $nonHttpURLs += $url
                 }
             }
 
             if ($nonHttpURLs.Count -eq 0) {
-                $ret = $true
+                $verificationResult = $true
             }
             else {
                 $controlResult.AddMessage("Found $($nonHttpURLs.Count) non-HTTPS URLs.");
             }
         }
         
-        if ($ret -eq $true) {
+        if ($verificationResult -eq $true) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No non-HTTPS URLs in replyURLs.");
         }
         else {
             $controlResult.AddMessage([VerificationResult]::Failed,
-                "Found one or more non-HTTPS URLs in replyURLs.", "(TODO) Please review and change them to HTTPS.");
+                "Found one or more non-HTTPS URLs in replyURLs.", 
+                "(TODO) Please review and change them to HTTPS. List of non-HTTPS URLs: $($nonHttpURLs -join ',')");
+            $controlResult.DetailedResult = (ConvertTo-Json $nonHttpURLs);
         }
 
         return $controlResult;
     }
 
     hidden [ControlResult] CheckHomePageIsHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ((-not [String]::IsNullOrEmpty($app.HomePage)) -and $app.Homepage.ToLower().startswith('http:')) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -134,7 +146,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckLogoutURLIsHTTPS([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ((-not [String]::IsNullOrEmpty($app.LogoutUrl)) -and $app.LogoutURL.ToLower().startswith('http:')) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -149,8 +161,9 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckImplicitFlowIsNotUsed([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
-        if ($app.Oauth2AllowImplicitFlow -eq $true) {
+        $app = $this.GetMgResourceObject()
+        
+        if ($app.Web.ImplicitGrantSettings.EnableAccessTokenIssuance -eq $true) {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 "Implicit Authentication flow is enabled for app [$($app.DisplayName)].");
         }
@@ -162,7 +175,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckPrivacyDisclosure([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ([String]::IsNullOrEmpty($app.InformationalUrls.Privacy) -or (-not ($app.InformationalUrls.Privacy -match [Constants]::RegExForValidURL))) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -177,11 +190,10 @@ class AppRegistration: SVTBase {
 
 
     hidden [ControlResult] CheckAppIsCurrentTenantOnly([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject();
         
         #Currently there are 2 places this might be set, AvailableToOtherTenants setting or SignInAudience = "AzureADMultipleOrgs" (latter is new)
-        if ( ($app.AvailableToOtherTenants -eq $true) -or
-            (-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg")) {
+        if ($app.SignInAudience -ne "AzureADMyOrg") {
             $controlResult.AddMessage([VerificationResult]::Failed,
                 [MessageData]::new("The app [$($app.DisplayName)] is not limited to current enterprise tenant."));
         }
@@ -194,7 +206,7 @@ class AppRegistration: SVTBase {
 
     
     hidden [ControlResult] CheckOrphanedApp([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -208,7 +220,7 @@ class AppRegistration: SVTBase {
     }
     
     hidden [ControlResult] CheckAppFTEOwner([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -233,14 +245,23 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckRedirectURIsWithWilcard([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
-        if ($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0) {
+        $app = $this.GetMgResourceObject()
+
+        # Initialize an empty array to store all redirect URIs
+        $totalRedirectUris = @()
+
+        # Concatenate arrays from each individual list into $totalRedirectUris
+        $totalRedirectUris += $app.Spa.RedirectUris
+        $totalRedirectUris += $app.Web.RedirectUris
+        $totalRedirectUris += $app.PublicClient.RedirectUris
+
+        if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No redirect URLs were found.");
         }
         else {
             $urlsWithWildcard = @()
-            foreach ($url  in $app.ReplyURLs) {
+            foreach ($url  in $totalRedirectUris) {
                 if ($url.Contains("*")) {
                     $urlsWithWildcard += $url
                 }
@@ -256,21 +277,29 @@ class AppRegistration: SVTBase {
                 $controlResult.DetailedResult = (ConvertTo-Json $urlsWithWildcard);
             }
         }
-        
 
         return $controlResult;
     }
 
     hidden [ControlResult] CheckDanglingRedirectURIs([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
-        if ($null -eq $app.ReplyURLs -or $app.ReplyURLs.Count -eq 0) {
+        $app = $this.GetMgResourceObject()
+
+        # Initialize an empty array to store all redirect URIs
+        $totalRedirectUris = @()
+
+        # Concatenate arrays from each individual list into $totalRedirectUris
+        $totalRedirectUris += $app.Spa.RedirectUris
+        $totalRedirectUris += $app.Web.RedirectUris
+        $totalRedirectUris += $app.PublicClient.RedirectUris
+
+        if ($null -eq $totalRedirectUris -or $totalRedirectUris.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Passed,
                 "No redirect URLs were found.");
         }
         else {
             $danglingUrls = @()
             
-            foreach ($url  in $app.ReplyURLs) {
+            foreach ($url  in $totalRedirectUris) {
                 $parsedUrl = $url
                 if ($parsedUrl -match "http://") {
                     $parsedUrl = ($url -split "http://" -split "/")[1]
@@ -304,11 +333,10 @@ class AppRegistration: SVTBase {
         }
         
         return $controlResult;
-
     }
 
     hidden [ControlResult] CheckAppHasFTEOwnerOnly([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject()
 
         if ($null -eq $this.AppOwners -or $this.AppOwners.Count -eq 0) {
             $controlResult.AddMessage([VerificationResult]::Failed,
@@ -335,7 +363,7 @@ class AppRegistration: SVTBase {
 
     hidden [ControlResult] CheckOrphanedAppDoesNotHaveLongExpirySecrets([ControlResult] $controlResult)
     {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject();
 
         $clientCredentials = $app.PasswordCredentials
         if ($null -eq $clientCredentials -or $clientCredentials.Count -eq 0) {
@@ -370,7 +398,7 @@ class AppRegistration: SVTBase {
     }
     
     hidden [ControlResult] CheckAppDoesNotHaveLongExpirySecrets([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject()
+        $app = $this.GetMgResourceObject();
 
         $clientCredentials = $app.PasswordCredentials
         if ($null -eq $clientCredentials -or $clientCredentials.Count -eq 0) {
@@ -395,7 +423,7 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckAppUsesMiniminalPermissions([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject();
+        $app = $this.GetMgResourceObject();
         $globalAppFlaggedPermissions = [System.Collections.ArrayList]::new();
         foreach ($resource in $app.RequiredResourceAccess) {
             $flaggedDelegatePermissions = [System.Collections.ArrayList]::new();
@@ -440,13 +468,17 @@ class AppRegistration: SVTBase {
     }
 
     hidden [ControlResult] CheckAppInstanceLock([ControlResult] $controlResult) {
-        $app = $this.GetResourceObject();
-        if ( ($app.AvailableToOtherTenants -eq $true) -or
-        (-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg"))
+        $app = $this.GetMgResourceObject();
+
+        # Check if the app's sign-in audience is not AzureADMyOrg which would mean only users in the given tenant can use the app
+        if ((-not [String]::IsNullOrEmpty($app.SignInAudience)) -and ($app.SignInAudience -ne "AzureADMyOrg"))
         {
             try
             {
-                $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $this.ResourceObject.AppId)
+                # Invoke Graph API to retrieve app information
+                $appAPIObj = [WebRequestHelper]::InvokeGraphAPI([Constants]::GraphApplicationUrl -f $app.AppId)
+
+                # Check if app instance lock property is enabled for all properties
                 if($null -ne $appAPIObj.servicePrincipalLockConfiguration -and $appAPIObj.servicePrincipalLockConfiguration.isEnabled -and $appAPIObj.servicePrincipalLockConfiguration.allProperties)
                 {
                     $controlResult.AddMessage([VerificationResult]::Passed,
@@ -460,6 +492,7 @@ class AppRegistration: SVTBase {
             }
             catch
             {
+                # Add error message if unable to determine app instance lock property
                 $controlResult.AddMessage([VerificationResult]::Error,
                 [MessageData]::new("Could not determine app instance lock property of app [$($app.DisplayName)]."));
             }
@@ -467,6 +500,7 @@ class AppRegistration: SVTBase {
         }
         else
         {
+            # Add passed message if app is limited to current enterprise tenant
             $controlResult.AddMessage([VerificationResult]::Passed,
             [MessageData]::new("App [$($app.DisplayName)] is limited to current enterprise tenant."));
         }

@@ -66,19 +66,9 @@ function Get-AzSKAADSecurityStatusTenant
 				$TenantId = $resolver.TenantId 
 			}
 
-			$evaluationResult = $Null;
-			$totalResourcesScanned = 0;
-			Do
-			{
-				$resolver.ClearResources();
-				# Do at least one pass for non-batched scans.
-				$secStatus = [ServicesSecurityStatus]::new($TenantId, $PSCmdlet.MyInvocation, $resolver);
-				if ($secStatus) 
-				{	
-					$returnValue = $secStatus.EvaluateControlStatus();
-				}
-				$totalResourcesScanned += $resolver.SVTResourcesFoundCount;
-			} While(($resolver.SVTResourcesFoundCount -gt 0 -and $resolver.SVTResourcesFoundCount -le 15000)-and $resolver.ShouldBatchScan -and ($MaxObj -le 0 -or $totalResourcesScanned -lt $MaxObj)); 
+			$secStatus = [ServicesSecurityStatus]::new($TenantId, $PSCmdlet.MyInvocation, $resolver);
+			$evaluationResult = $secStatus.EvaluateControlStatus();
+			$resolver.ClearResources();
 			return $evaluationResult;
 		}
 		catch 
