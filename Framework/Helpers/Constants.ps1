@@ -88,10 +88,10 @@ class Constants
 	}
 
 	static [string] $StorageAccountPreName= "azsk"
-	static [string] $AzSKAppFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft" $([Constants]::AzSKModuleName));
-	static [string] $AzSKLogFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft");
-	static [string] $AzSKTempFolderPath = (Join-Path $([System.IO.Path]::GetTempPath()) [Constants]::AzSKModuleName);
-	static [string] $AzSKExtensionsFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft" $([Constants]::AzSKModuleName) "Extensions");
+	static [string] $AzSKAppFolderPath = ([System.IO.Path]::Combine($([Environment]::GetFolderPath("LocalApplicationData")),"Microsoft",$([Constants]::AzSKModuleName)));
+	static [string] $AzSKLogFolderPath = ([System.IO.Path]::Combine($([Environment]::GetFolderPath("LocalApplicationData")), "Microsoft"));
+	static [string] $AzSKTempFolderPath = ([System.IO.Path]::Combine($([System.IO.Path]::GetTempPath()),[Constants]::AzSKModuleName));
+	static [string] $AzSKExtensionsFolderPath = ([System.IO.Path]::Combine($([Environment]::GetFolderPath("LocalApplicationData")),"Microsoft",$([Constants]::AzSKModuleName),"Extensions"));
 	static [string] $ARMManagementUri = "https://management.azure.com/";	
 	static [string] $VersionCheckMessage = "A newer version of AzSK is available: Version {0} `r`nTo update, run the command below in a fresh PS window:`r`n" ;
 	static [string] $VersionWarningMessage = ("Using the latest version ensures that AzSK security commands you run use the latest, most up-to-date controls. `r`nResults from the current version should not be considered towards compliance requirements.`r`n" + [Constants]::DoubleDashLine);
@@ -183,8 +183,8 @@ class Constants
 		if(-not [string]::IsNullOrWhiteSpace($moduleName))
 		{
 			[Constants]::AzSKModuleName = $moduleName.Replace("azsk","AzSK");
-			[Constants]::AzSKAppFolderPath = (Join-Path $([Environment]::GetFolderPath("LocalApplicationData")) "Microsoft" $([Constants]::AzSKModuleName));
-			[Constants]::AzSKTempFolderPath = (Join-Path $([System.IO.Path]::GetTempPath())  $([Constants]::AzSKModuleName));
+			[Constants]::AzSKAppFolderPath = ([System.IO.Path]::Combine($([Environment]::GetFolderPath("LocalApplicationData")),"Microsoft",$([Constants]::AzSKModuleName)));
+			[Constants]::AzSKTempFolderPath = ([System.IO.Path]::Combine($([System.IO.Path]::GetTempPath()), $([Constants]::AzSKModuleName)));
 		}
 	}
 	static [void] SetAzSKCurrentModuleVersion($moduleVersion)

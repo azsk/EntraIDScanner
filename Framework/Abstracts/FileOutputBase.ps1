@@ -51,7 +51,7 @@ class FileOutputBase: ListenerBase
 			}
 
 
-			$outputPath = (Join-Path $basePath  $([Constants]::AzSKModuleName) "Logs");
+			$outputPath = ([System.IO.Path]::Combine($basePath, $([Constants]::AzSKModuleName), "Logs"));
 
 			$sanitizedPath = [Helpers]::SanitizeFolderName($context.TenantName);
 			if ([string]::IsNullOrEmpty($sanitizedPath)) {
@@ -67,16 +67,16 @@ class FileOutputBase: ListenerBase
 			}
 
 			if ([string]::IsNullOrEmpty($sanitizedPath)) {
-				$outputPath = (Join-Path $outputPath "Default" $runPath);           
+				$outputPath = ([System.IO.Path]::Combine($outputPath,"Default",$runPath));           
 			}
 			else {
-				$outputPath = (Join-Path $outputPath "Org_$sanitizedPath" $runPath);            
+				$outputPath = ([System.IO.Path]::Combine($outputPath,"Org_$sanitizedPath",$runPath));            
 			}
 
 			if (-not [string]::IsNullOrEmpty($subFolderPath)) {
 				$sanitizedPath = [Helpers]::SanitizeFolderName($subFolderPath);
 				if (-not [string]::IsNullOrEmpty($sanitizedPath)) {
-					$outputPath = (Join-Path $outputPath $sanitizedPath);            
+					$outputPath = ([System.IO.Path]::Combine($outputPath,$sanitizedPath));            
 				}   
 			}
 
