@@ -1,12 +1,11 @@
 *** This README file describes how to interpret the different files created when AzSK PS cmdlets are executed ***
 
 ## Index
-1. [AzSK Cmdlets Output Structure](#azsk-cmdlets-output-structure)
-2. [AzSK Root Output Folder](#azsk-root-output-folder)
-3. [Sub-Folder](#sub-folder)
-4. [Contents of Output Folder](#contents-of-output-folder)
-5. [Usage Guidelines](#usage-guidelines)
-6. [Field descriptions in SecurityReport.csv](#field-descriptions-in-securityreportcsv)
+1. [AzSK Root Output Folder](#azsk-root-output-folder)
+2. [Sub-Folders](#sub-folders)
+3. [Contents of Output Folder](#contents-of-output-folder)
+4. [Usage Guidelines](#usage-guidelines)
+5. [Field descriptions in SecurityReport.csv](#field-descriptions-in-securityreportcsv)
 
 ## AzSK Root Output Folder
 
