@@ -11,21 +11,21 @@
 
 Each AzSK cmdlet writes output to a folder whose location is determined as below:
 
-AzSK-Root-Output-Folder = `%LocalAppData%\Microsoft\AzSK.AADLogs`
+AzSK-Root-Output-Folder = `%LocalAppData%\Microsoft\AzSK.AAD\Logs`
 
-Example: `"C:\Users\<userName>\AppData\Local\Microsoft\AzSK.AADLogs"`
+Example: `"C:\Users\<userName>\AppData\Local\Microsoft\AzSK.AAD\Logs"`
 
 ## Sub-Folders
 
-Sub-Folder = `Org_<Organization Name><Timestamp>_<Command Abbreviation>`
+Sub-Folder = `Org_<OrganizationName><Timestamp>_<Command Abbreviation>`
 
-Example: `"Org_[yourOrganizationName]\20170321_183800_GSS"`
+Example: `"Org_[yourSubscriptionId]\20170321_183800_GSS"`
 
 Thus, the full path to an output folder for a specific cmdlet might look like:
 
-Example: `"C:\Users\userName\AppData\Local\Microsoft\AzSK.AADLogs\Org_[yourSubscriptionName]\20170321_183800_GSS"`
+Example: `"C:\Users\userName\AppData\Local\Microsoft\AzSK.AAD\Logs\Org_72f999bf-86f5-59ez-91ab-2c9ac011db77\20170321_183800_GSS"`
 
-By default, cmdlets open this folder upon completion of the cmdlet (we assume you'd be interested in examining the control evaluation status, etc.).
+By default, cmdlets open this folder upon completion of the cmdlet (we assume you'd be interested in examining the control evaluation status, etc).
 
 ---
 
@@ -47,9 +47,9 @@ By default, cmdlets open this folder upon completion of the cmdlet (we assume yo
 ## Usage Guidelines
 
 1. The `SecurityReport.CSV` file provides a gist of the control evaluation results. Investigate those that say 'Verify' or 'Failed'.
-2. For 'Failed' or 'Verify' controls, look in the `<resourceType>.LOG` file (search for the text 'Failed' or by control-id) to help you understand why the control has failed.
+2. For 'Failed' or 'Verify' controls, look in the `<resourceType>.LOG` file (search by control-id) to help you understand why the control has failed.
 3. For 'Verify' controls, you will also find the `SecurityEvaluationData.JSON` file in the `\Etc` sub-folder handy.
-4. For some controls, you can also use the 'Recommendation' field in the control output to quickly get to the PS command to address the issue.
+4. To remediate the controls, you can also use the 'Recommendation' field in the control output to quickly get to the PS command to address the issue.
 5. Make changes as needed to the subscription/resource configs based on steps 2, 3, and 4.
 6. Rerun the cmdlet and verify that the controls you just attempted fixes for are passing now.
 
