@@ -62,7 +62,7 @@
           "Automated": "Yes",
           "MethodName": "CheckEnterpriseApplicationHasFTEOwnerOnly",
           "Rationale": "Owners of the enterprise app have access to critical app settings such as group permissions, credentials and user assignments. Providing ownership to FTE accounts only leads to better app governance and prevents malicious users from outside the enterprise from accessing critical data.",
-          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application. --> 3. Proceed to Owners under Manage. --> 4. Check the users with the role as Configuration Owner 5. Remove any user with non-Member account from the owners",
+          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application. --> 3. Proceed to Owners under Manage. --> 4. Check the users with the role as Configuration Owner 5. Remove any user with non-Member account from the owners.",
           "Tags": [
             "SDL",
             "TCP",

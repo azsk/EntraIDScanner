@@ -238,7 +238,7 @@
       "Automated": "Yes",
       "MethodName": "CheckAppDoesNotHaveLongExpirySecrets",
       "Rationale": "If client secrets are a must to be used, ensure that the secret expiry is not more than 90 days. Long expiry secrets can lead to unauthorized access for a longer window in case of secret compromise.",
-      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Proceed to certificates and secrets under Manage. --> 4. Under Client secrets look delete any secrets with expiry more than 90 days. (Configurable in Application -> CredentialExpiryThresholdInDays, ControlSettings.json)",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Proceed to certificates and secrets under Manage. --> 4. Under Client secrets look delete any secrets with expiry more than 90 days. (Configurable in Application -> CredentialExpiryThresholdInDays, ControlSettings.json).",
       "Tags": [
         "SDL",
         "TCP",
