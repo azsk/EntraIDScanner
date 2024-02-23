@@ -191,6 +191,8 @@ class AccountHelper {
         {
             throw ([SuppressedException]::new(("Cannot call this method before getting a sign-in context!"), [SuppressedExceptionType]::InvalidOperation))
         }
+
+        [AccountHelper]::RefreshMgContextToken();
         return [AccountHelper]::currentMgContext;
     }
 
@@ -291,6 +293,8 @@ class AccountHelper {
             [AccountHelper]::tenantInfoMsg = "Entra ID Tenant Info: `n`tTenantId: $($mgCtx.TenantId)"
         }
 
+        [AccountHelper]::RefreshMgContextToken();
+
         return [AccountHelper]::currentMgContext
     }
 
@@ -303,6 +307,7 @@ class AccountHelper {
 
         if (-not [AccountHelper]::GraphAccessToken -or [AccountHelper]::GraphAccessToken.ExpiresOn.UtcDateTime -le [DateTime]::UtcNow)
         {
+            Write-Information "Refreshing Microsoft Graph token for the current session..."
             $graphToken = ConvertTo-SecureString ([AccountHelper]::GetGraphToken().Token) -AsPlainText -Force;
             Connect-MgGraph -AccessToken $graphToken -NoWelcome;
             [AccountHelper]::currentMgContext = Get-MgContext;

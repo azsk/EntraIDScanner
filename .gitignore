@@ -199,6 +199,6 @@ ModelManifest.xml
 /src/AzSK.sln
 /src/AzSK.Debug
 /src/AzSK/AzSK.sln
-/.vscode/launch.json
+/.vscode
 *.local.ps1
 PSGetModuleInfo.xml
