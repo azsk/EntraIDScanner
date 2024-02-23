@@ -62,7 +62,7 @@
           "Automated": "Yes",
           "MethodName": "CheckEnterpriseApplicationHasFTEOwnerOnly",
           "Rationale": "Owners of the enterprise app have access to critical app settings such as group permissions, credentials and user assignments. Providing ownership to FTE accounts only leads to better app governance and prevents malicious users from outside the enterprise from accessing critical data.",
-          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application. --> 3. Proceed to Owners under Manage. --> 4. Check the users with the role as Configuration Owner 5. Remove any user with non-Member account from the owners.",
+          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application. --> 3. Proceed to Owners under Manage. --> 4. Check the users with the role as Configuration Owner. 5. Remove any user with non-Member account from the owners.",
           "Tags": [
             "SDL",
             "TCP",
@@ -80,7 +80,7 @@
           "Automated": "Yes",
           "MethodName": "CheckEnterpriseAppUsesMiniminalPermissions",
           "Rationale": "Apps should only be granted the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
-          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application --> 3. Go to Permissions under Security. -->  4. Review the risky permissions for this app listed in EnterpriseApplication.LOG file and revoke them.",
+          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application. --> 3. Go to Permissions under Security. --> 4. Review the risky permissions for this app listed in EnterpriseApplication.LOG file and revoke them.",
           "Tags": [
             "SDL",
             "TCP",
@@ -98,7 +98,7 @@
           "Automated": "Yes",
           "MethodName": "CheckEnterpriseMultiTenantAppUsesMiniminalPermissions",
           "Rationale": "Apps should only be granted the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
-          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application --> 3. Go to Permissions under Security. -->  4. Review the risky permissions for this app listed in EnterpriseApplication.LOG file and revoke them.",
+          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application. --> 3. Go to Permissions under Security. --> 4. Review the risky permissions for this app listed in EnterpriseApplication.LOG file and revoke them.",
           "Tags": [
             "SDL",
             "TCP",
@@ -116,7 +116,7 @@
           "Automated": "Yes",
           "MethodName": "CheckEnterpiseApplicationDoesNotUsePasswordCredentials",
           "Rationale": "Password credentials tend to be easier to compromise via various attacks. They are also symmetric leading to attack vectors on both ends of the flow.",
-          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application --> 3. Go to Permissions under Security. -->  4. Review the risky permissions for this app listed in EnterpriseApplication.LOG file and revoke them.",
+          "Recommendation": "1. Access Enterprise Applications. --> 2. Locate and select the relevant application. --> 3. Go to Permissions under Security. --> 4. Review the risky permissions for this app listed in EnterpriseApplication.LOG file and revoke them.",
           "Tags": [
             "SDL",
             "TCP",

@@ -255,7 +255,7 @@
       "Automated": "Yes",
       "MethodName": "CheckAppUsesMiniminalPermissions",
       "Rationale": "Apps should only require the least needed permission possible to prevent risky unauthorized access to enterprise resources. App permissions are riskier than delegated permissions as these do not require user consent.",
-      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application --> 3. Go to API permissions under Manage. -->  4. Review the risky permissions for this app listed in Application.LOG file and revoke them.",
+      "Recommendation": "1. Access App Registrations. --> 2. Locate and select the relevant application. --> 3. Go to API permissions under Manage. -->  4. Review the risky permissions for this app listed in Application.LOG file and revoke them.",
       "Tags": [
         "SDL",
         "TCP",
