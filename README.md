@@ -11,10 +11,21 @@ Welcome to the source code repo for the [Entra ID](https://www.microsoft.com/en-
 <br>(Set the gallery name to _PSGallery_ for the prod version and _PoshTestGallery_ for dev version/bugbash purpose.)
 
 3. `Install-module AzSKStaging.AAD -Repository PoshTestGallery -Force -AllowClobber -Scope CurrentUser`
-<br>Install latest version of the said module
+<br>Install latest version of the module
 
 
 ## Running the scanner: 
+1. Install the following packages if not already done before:<br>
+`Install-Module -Name Az.Accounts -RequiredVersion 2.12.1 -Force -Scope CurrentUser -AllowClobber`<br>
+`Install-Module -Name Az.Resources -RequiredVersion 2.0.1 -Force -Scope CurrentUser -AllowClobber`<br>
+`Install-Module -Name Microsoft.Graph.Applications -RequiredVersion 2.12.0 -Force -Scope CurrentUser -AllowClobber`<br>
+`Install-Module -Name Microsoft.Graph.Users -RequiredVersion 2.12.0 -Force -Scope CurrentUser -AllowClobber`<br>
+`Install-Module -Name Microsoft.Graph.Groups -RequiredVersion 2.12.0 -Force -Scope CurrentUser -AllowClobber`<br>
+`Install-Module -Name Microsoft.Graph.Identity.DirectoryManagement -RequiredVersion 2.12.0 -Force -Scope CurrentUser -AllowClobber`<br>
+`Install-Module -Name Microsoft.Graph.DirectoryObjects -RequiredVersion 2.12.0 -Force -Scope CurrentUser -AllowClobber`<br>
+`Install-Module -Name Microsoft.Graph.Authentication -RequiredVersion 2.12.0 -Force -Scope CurrentUser -AllowClobber`<br>
+
+
 1. `ipmo AzSKStaging.AAD`
 <br>Import the package
 
