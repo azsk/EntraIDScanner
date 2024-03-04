@@ -1,0 +1,14 @@
+{
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PowerShell: Debug",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${workspaceFolder}/debug.local.ps1",
+            "args": [],
+            "createTemporaryIntegratedConsole": true
+        }
+    ]
+}
