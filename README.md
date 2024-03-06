@@ -3,6 +3,8 @@
 Welcome to the source code repo for the [Entra ID](https://www.microsoft.com/en-in/security/business/identity-access/microsoft-entra-id) Scanner. You can start browsing the source code by clicking on 'src' folder above. To learn more, go through the complete documentation [here](https://github.com/azsk/DevOpsKit-docs).
 
 ## Steps to install the package:
+Open Windows PowerShell ISE or Windows PowerShell terminal and run the following commands:
+
 1. `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
 <br>__[Optional]__ Set the execution policy to allow the installation of the module.
 
