@@ -93,14 +93,14 @@ class WriteEnvironmentFile: FileOutputBase
 		$this.AddOutputLog([Helpers]::ConvertObjectToString($loadedModules, $false));
 		$this.AddOutputLog([Constants]::DoubleDashLine);
 
-		#$rmContext = [AccountHelper]::GetCurrentRmContext()
+		#$azContext = [AccountHelper]::GetCurrentAzAcontext()
 
 		# $this.AddOutputLog("Logged-in user context");
-		# $this.AddOutputLog([Helpers]::ConvertObjectToString(($rmContext.Account | Select-Object -Property Id, Type, ExtendedProperties), $false));
+		# $this.AddOutputLog([Helpers]::ConvertObjectToString(($azContext.Account | Select-Object -Property Id, Type, ExtendedProperties), $false));
 		# $this.AddOutputLog([Constants]::DoubleDashLine);
 
 		# $this.AddOutputLog("AzureRM context");
-		# $this.AddOutputLog([Helpers]::ConvertObjectToString(($rmContext | Select-Object -Property Environment, Subscription, Tenant), $false));
+		# $this.AddOutputLog([Helpers]::ConvertObjectToString(($azContext | Select-Object -Property Environment, Subscription, Tenant), $false));
 		$this.AddOutputLog([Constants]::DoubleDashLine);
 	}
 

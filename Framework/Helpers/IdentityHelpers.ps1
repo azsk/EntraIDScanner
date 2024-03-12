@@ -7,7 +7,7 @@ class IdentityHelpers
 	{
 		$return = $null    		
 		$header = "Bearer " + $GraphAccessToken
-		$RMContext = [AccountHelper]::GetCurrentRmContext()
+		$azContext = [AccountHelper]::GetCurrentAzAcontext()
 		$headers = @{"Authorization"=$header;"Content-Type"="application/json"}
 		$uri=""    
 		$output = $null
@@ -15,10 +15,10 @@ class IdentityHelpers
 		{
 			if($null -ne $ObjectId -and [System.Guid]::Empty -ne $ObjectId)
 			{
-				$uri = [string]::Format("https://graph.windows.net/{0}/users/{1}?api-version=1.6",$RMContext.Tenant.Id, $ObjectId)
+				$uri = [string]::Format("https://graph.windows.net/{0}/users/{1}?api-version=1.6",$azContext.Tenant.Id, $ObjectId)
 			}
 			elseif ($null -ne $SignInName) {
-				$uri = [string]::Format("https://graph.windows.net/{0}/users/{1}?api-version=1.6",$RMContext.Tenant.Id, $SignInName)        
+				$uri = [string]::Format("https://graph.windows.net/{0}/users/{1}?api-version=1.6",$azContext.Tenant.Id, $SignInName)        
 			}
 			else {
 				return $false
