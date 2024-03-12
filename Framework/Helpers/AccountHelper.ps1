@@ -36,7 +36,6 @@ function New-PrivRole()
 }
 
 class AccountHelper {
-    static hidden [PSObject] $currentAADContext;
     static hidden [PSObject] $currentAzContext;
     static hidden [PSObject] $currentRMContext;
     static hidden [PSObject] $currentMgContext;
@@ -47,7 +46,6 @@ class AccountHelper {
 	#TODO: May need to consider situations where user runs for 2 diff tenants in same session...
     static hidden [string] $tenantInfoMsg; 
 
-    static hidden [PSObject] $currentAADUserObject;
     static hidden [PSObject] $currentMgUserObject;
 
     static hidden [CommandType] $ScanType;
@@ -102,14 +100,8 @@ class AccountHelper {
         return [AccountHelper]::currentAzContext
     }
 
-    hidden static [void] ClearTenantContext($clearAADInfo)
+    hidden static [void] ClearTenantContext()
     {
-        if ($clearAADInfo)
-        {
-            [AccountHelper]::currentAADContext = $null;
-            [AccountHelper]::AADAPIAccessToken = $null;
-            [AccountHelper]::currentAADUserObject = $null;
-        }
         [AccountHelper]::currentAzContext = $null;
         [AccountHelper]::currentRMContext = $null;
         [AccountHelper]::GraphAccessToken = $null;
@@ -133,6 +125,14 @@ class AccountHelper {
                 if($null -ne $azContext)
                 {
                     $apiToken = Get-AzAccessToken -ResourceTypeName MSGraph
+                    if ($null -eq $apiToken)
+                    {
+                        # NOTE: This is due a unusual behaviour of Azure Powershell module, where if the user has signed-in to the exact same tenant
+                        # without using the -TenantId parameter, the Get-AzAccessToken will return null.
+                        # To workaround this, we are trying to force a refresh and try again
+                        [AccountHelper]::RefreshAzContext($azContext.Tenant.Id);
+                        $apiToken = Get-AzAccessToken -ResourceTypeName MSGraph
+                    }
                 }  
             }
             catch {
@@ -142,46 +142,45 @@ class AccountHelper {
             [AccountHelper]::GraphAccessToken = $apiToken
         }
 
-        return [AccountHelper]::GraphAccessToken        
+        return [AccountHelper]::GraphAccessToken
     }
 
     # Can be called with $null (when tenantId is not specified by the user)
-    hidden static [PSObject] GetCurrentAzContext($desiredTenantId, $interactive)
+    hidden static [PSObject] GetCurrentAzContext($desiredTenantId)
     {
         if(-not [AccountHelper]::currentAzContext)
         {
             $azContext = Get-AzContext 
-
             #If there's no Az ctx, or it is indeterminate (user has no Azure subscription) or the tenantId in the azCtx does not match desired tenantId
-            if ($azContext -eq $null -or $azContext.Tenant -eq $null -or (-not [string]::IsNullOrEmpty($desiredTenantId) -and $azContext.Tenant.Id -ne $desiredTenantId))
+            if ($null -eq $azContext -or $null -eq $azContext.Tenant -or (-not [string]::IsNullOrEmpty($desiredTenantId) -and $azContext.Tenant.Id -ne $desiredTenantId))
             {
-                #TODO: Consider simplifying this...use AzCtx only if no tenantId or tenantId matches...for all else just do fresh ConnectAzureAD??
-                #Better than clearing up existing AzCtx a user may want to keep using otherwise.
-                if ($azContext) #If we have a context for another tenant, disconnect.
-                {
-                    Disconnect-AzAccount -ErrorAction Stop
-                }
-                #Now try to fetch a fresh context.
-                try {
-                        if ($interactive -eq $true)
-                        {
-                            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId;
-                        }
-                        else
-                        {
-                            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId -UseDeviceAuthentication;
-                        }
-                        #On a fresh login, the 'cached' context object we care about is inside the AzureContext
-                        $azContext = $azureContext.Context 
-                }
-                catch {
-                    Write-Error "Could not login to Azure environment..." #TODO: PublishCustomMessage equivalent for 'static' classes?
-                    throw ([SuppressedException]::new(("Could not login to Azure envmt. Will try direct Connect-AzureAD...."), [SuppressedExceptionType]::AccessDenied))   
-                }
+                $azContext = [AccountHelper]::RefreshAzContext($desiredTenantId); 
             }
+            
+            
             [AccountHelper]::currentAzContext = $azContext
         }
         return [AccountHelper]::currentAzContext
+    }
+
+    hidden static [psobject] RefreshAzContext($desiredTenantId)
+    {
+        $azContext = Get-AzContext 
+        if ($azContext) #If we have a context for another tenant, disconnect.
+        {
+            Disconnect-AzAccount -ErrorAction Stop
+        }
+        #Now try to fetch a fresh context.
+        try {
+            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId;
+        }
+        catch {
+            Write-Warning "Could not acquire Azure context interactively, will fallback to device mode";
+            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId -UseDeviceAuthentication;
+        }
+        $azContext = $azureContext.Context
+        [AccountHelper]::currentAzContext = $azContext
+        return [AccountHelper]::currentAzContext;
     }
 
     hidden static [PSObject] GetCurrentMgContext()
@@ -202,12 +201,11 @@ class AccountHelper {
 
         if(-not $currMgCtx -or (-not [String]::IsNullOrEmpty($desiredTenantId) -and $desiredTenantId -ne $currMgCtx.TenantId))
         {
-            #TODO: Cleanup method call post migration to graph.
-            [AccountHelper]::ClearTenantContext($false);
+            [AccountHelper]::ClearTenantContext();
 
             $mgCtx = $null;
             $mgUserObj = $null;
-            #Try leveraging Azure context if available
+           
             try {
                 $tenantId = $null;
                 $crossTenant = $false;
@@ -217,15 +215,7 @@ class AccountHelper {
                     $tenantId = $desiredTenantId;
                 }
 
-                $azContext = $null;
-                try {
-                    #Either throws or returns non-null
-                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId, $true);
-                }
-                catch {
-                    Write-Warning "Could not acquire Azure context interactively, will fallback to device mode";
-                    $azContext = [AccountHelper]::GetCurrentAzContext($desiredTenantId, $false);
-                }
+                $azContext =  [AccountHelper]::GetCurrentAzContext($desiredTenantId);
                 
                 if ($null -ne $azContext -and $null -ne $azContext.Tenant) #Can be $null when a user has no Azure subscriptions.
                 {
@@ -422,7 +412,7 @@ class AccountHelper {
                 #Either throws or returns non-null
                 $azContext = [AccountHelper]::GetCurrentAzContext()
                 $tenantId = $null
-                if ($azContext.Tenant -ne $null) #happens if user does not have any Azure subs.
+                if ($null -ne $azContext.Tenant) #happens if user does not have any Azure subs.
                 {
                     $tenantId = $azContext.Tenant.Id
                 }
