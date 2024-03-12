@@ -20,7 +20,7 @@ class WebRequestHelper {
 		$azureEnv= [AzSKSettings]::GetInstance().AzureEnvironment
 		if(-not [string]::IsNullOrWhiteSpace($azureEnv) -and ($azureEnv -ne [Constants]::DefaultAzureEnvironment))
 		{
-		return [AccountHelper]::GetCurrentRmContext().Environment.ResourceManagerUrl
+		return [AccountHelper]::GetCurrentAzAcontext().Environment.ResourceManagerUrl
 		}
 		return "https://management.azure.com/"
 	}
@@ -30,7 +30,7 @@ class WebRequestHelper {
 		$azureEnv= [AzSKSettings]::GetInstance().AzureEnvironment
 		if(-not [string]::IsNullOrWhiteSpace($azureEnv) -and ($azureEnv -ne [Constants]::DefaultAzureEnvironment))
 		{
-		return [AccountHelper]::GetCurrentRmContext().Environment.ServiceManagementUrl
+		return [AccountHelper]::GetCurrentAzAcontext().Environment.ServiceManagementUrl
 		}
 		return "https://management.core.windows.net/"
 	}
