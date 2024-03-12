@@ -278,10 +278,10 @@ class ConfigurationHelper {
 		{
 			if($enableAADAuthForOnlinePolicyStore)
 			{		
-			$rmContext = [AccountHelper]::GetCurrentRmContext();
-			if(-not [string]::IsNullOrWhiteSpace($rmContext.Environment.Name) -and $rmContext.Environment.Name -ne [Constants]::DefaultAzureEnvironment)
+			$azContext = [AccountHelper]::GetCurrentAzAcontext();
+			if(-not [string]::IsNullOrWhiteSpace($azContext.Environment.Name) -and $azContext.Environment.Name -ne [Constants]::DefaultAzureEnvironment)
 		     {
-				   $ResourceAppIdURI = $rmContext.Environment.ServiceManagementUrl
+				   $ResourceAppIdURI = $azContext.Environment.ServiceManagementUrl
 			 }
 			 else {
 				$ResourceAppIdURI = "https://management.core.windows.net/"

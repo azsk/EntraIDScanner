@@ -37,7 +37,6 @@ function New-PrivRole()
 
 class AccountHelper {
     static hidden [PSObject] $currentAzContext;
-    static hidden [PSObject] $currentRMContext;
     static hidden [PSObject] $currentMgContext;
     static hidden [PSObject] $AADAPIAccessToken;
     static hidden [PSObject] $GraphAccessToken;
@@ -53,44 +52,6 @@ class AccountHelper {
     static hidden [PrivilegedAADRoles] $UserAADPrivRoles = [PrivilegedAADRoles]::None; 
     static hidden [bool] $rolesLoaded = $false;
 
-    hidden static [PSObject] GetCurrentRMContext()
-	{
-		if (-not [AccountHelper]::currentRMContext)
-		{
-			$rmContext = Get-AzContext -ErrorAction Stop
-
-			if ((-not $rmContext) -or ($rmContext -and (-not $rmContext.Subscription -or -not $rmContext.Account))) {
-				[EventBase]::PublishGenericCustomMessage("No active Azure login session found. Initiating login flow...", [MessageType]::Warning);
-                [PSObject]$rmLogin = $null
-                $AzureEnvironment = [Constants]::DefaultAzureEnvironment
-                $AzskSettings = [Helpers]::LoadOfflineConfigFile("AzSK.AzureDevOps.Settings.json", $true)          
-                if([Helpers]::CheckMember($AzskSettings,"AzureEnvironment"))
-                {
-                   $AzureEnvironment = $AzskSettings.AzureEnvironment
-                }
-                if(-not [string]::IsNullOrWhiteSpace($AzureEnvironment) -and $AzureEnvironment -ne [Constants]::DefaultAzureEnvironment) 
-                {
-                    try{
-                        $rmLogin = Connect-AzAccount -EnvironmentName $AzureEnvironment
-                    }
-                    catch{
-                        [EventBase]::PublishGenericException($_);
-                    }         
-                }
-                else
-                {
-                    $rmLogin = Connect-AzAccount
-                }
-				if ($rmLogin) {
-                    $rmContext = $rmLogin.Context;	
-				}
-            }
-            [AccountHelper]::currentRMContext = $rmContext
-		}
-
-		return [AccountHelper]::currentRMContext
-	}
-
     hidden static [PSObject] GetCurrentAzContext()
     {
         if ($null -eq [AccountHelper]::currentAzContext)
@@ -103,7 +64,6 @@ class AccountHelper {
     hidden static [void] ClearTenantContext()
     {
         [AccountHelper]::currentAzContext = $null;
-        [AccountHelper]::currentRMContext = $null;
         [AccountHelper]::GraphAccessToken = $null;
         [AccountHelper]::tenantInfoMsg = $null;
         [AccountHelper]::UserAADPrivRoles = [PrivilegedAADRoles]::None; 
@@ -172,11 +132,25 @@ class AccountHelper {
         }
         #Now try to fetch a fresh context.
         try {
-            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId;
+            if ([string]::IsNullOrEmpty($desiredTenantId))
+            {
+                $azureContext = Connect-AzAccount -ErrorAction Stop;
+            }
+            else
+            {
+                $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId;
+            }
         }
         catch {
             Write-Warning "Could not acquire Azure context interactively, will fallback to device mode";
-            $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId -UseDeviceAuthentication;
+            if ([string]::IsNullOrEmpty($desiredTenantId))
+            {
+                $azureContext = Connect-AzAccount -ErrorAction Stop -UseDeviceAuthentication;
+            }
+            else
+            {
+                $azureContext = Connect-AzAccount -ErrorAction Stop -Tenant $desiredTenantId -UseDeviceAuthentication;
+            }
         }
         $azContext = $azureContext.Context
         [AccountHelper]::currentAzContext = $azContext
@@ -270,7 +244,8 @@ class AccountHelper {
 
                 if ($null -eq $mgUserObj)
                 {
-                    throw ([SuppressedException]::new("Could not find the user in the provided tenant, are you sure the right tenant id is passed?`n$_", [SuppressedExceptionType]::Generic))
+                    Clear-AzContext -Force;
+                    throw ([SuppressedException]::new("Could not find the user in the provided tenant, are you sure the right tenant id is passed?`n$_", [SuppressedExceptionType]::Generic));
                 }
             }
             catch {
@@ -431,12 +406,6 @@ class AccountHelper {
 		}
         return [AccountHelper]::AADAPIAccessToken
     }
-
-    
-	hidden static [void] ResetCurrentRMContext()
-	{
-		[AccountHelper]::currentRMContext = $null
-	}
 
     #TODO: Review calls to this. Should we have an AAD-version for it? Or just remove...
     static [string] GetAccessToken([string] $resourceAppIdUri, [string] $tenantId) 

@@ -6,7 +6,7 @@ class RemoteApiHelper {
 
     #TODO: Reconcile this with AccountHelper::GetAccessToken()
     hidden static [string] GetAccessToken() {
-        $rmContext = [AccountHelper]::GetCurrentRmContext();
+        $azContext = [AccountHelper]::GetCurrentAzAcontext();
 		$ResourceAppIdURI = [WebRequestHelper]::GetServiceManagementUrl()
         return [AccountHelper]::GetAccessToken($ResourceAppIdURI);
     }

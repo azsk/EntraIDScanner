@@ -129,7 +129,7 @@ class AIOrgTelemetry: ListenerBase {
 		   {
 			   $scanSource = [RemoteReportHelper]::GetScanSource();
 			   if($scanSource -ne [ScanSource]::Runbook) { return; }
-               $tenantId = ([AccountHelper]::GetCurrentRmContext()).Subscription.Id;
+               $tenantId = ([AccountHelper]::GetCurrentAzAcontext()).Subscription.Id;
 			   $resources= Get-AzResource
 			   $resourceGroups = Get-AzResourceGroup
 			   $telemetryEvents = [System.Collections.ArrayList]::new()
@@ -309,7 +309,7 @@ class AIOrgTelemetry: ListenerBase {
 				# No need to break execution
 			}
             try {
-                $azureContext = [AccountHelper]::GetCurrentRmContext()
+                $azureContext = [AccountHelper]::GetCurrentAzAcontext()
                 try {
                     $telemetryEvent.properties.Add([TelemetryKeys]::tenantId, $azureContext.Subscription.Id)
                 }
