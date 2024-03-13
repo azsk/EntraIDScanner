@@ -50,9 +50,6 @@ class CommandBase: AzSKRoot {
             throw [System.ArgumentException] ("The argument 'methodToCall' is null. Pass the reference of method to call. e.g.: [YourClass]::new().YourMethod");
         }
 
-		# Reset cached context
-		[AccountHelper]::ResetCurrentRmContext()  #BUGBUG - why is this needed? (Create/call ResetAzContext accordingly)
-
         $this.PublishRunIdentifier($this.InvocationContext);
 		[AIOrgTelemetryHelper]::TrackCommandExecution("Command Started",
 			@{"RunIdentifier" = $this.RunIdentifier}, @{}, $this.InvocationContext);

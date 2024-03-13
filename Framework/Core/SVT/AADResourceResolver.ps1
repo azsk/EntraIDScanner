@@ -120,22 +120,22 @@ class AADResourceResolver: Resolver
         try {  #BUGBUG: Investigate why this crashes in the Live tenant (even if user-created-objects exist...which should show up as 'user-owned' by default!) 
             if ($this.ShouldBatchScan)
             {
-                $userOwnedObjects = [array] (Get-MgUserOwnedObject -UserId $currUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
+                $userOwnedObjects = @(Get-MgUserOwnedObject -UserId $currUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
             }
             else
             {
-                $userOwnedObjects = [array] (Get-MgUserOwnedObject -UserId $currUser -Top $this.MaxObjectsToScan);   
+                $userOwnedObjects = @(Get-MgUserOwnedObject -UserId $currUser -Top $this.MaxObjectsToScan);   
             }
         }
         catch { #As a workaround, we take user-created objects, which seems to work (strange!)
             if ($this.ShouldBatchScan)
             {
-                $userCreatedObjects = [array] (Get-MgUserCreatedObject -UserId $currUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
+                $userCreatedObjects = @(Get-MgUserCreatedObject -UserId $currUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan);
                 $this.BatchCounters.UserOwnedObjects += $userCreatedObjects.Count;
             }
             else
             {
-                $userCreatedObjects = [array] (Get-MgUserCreatedObject -UserId $currUser -Top $this.MaxObjectsToScan);   
+                $userCreatedObjects =  @(Get-MgUserCreatedObject -UserId $currUser -Top $this.MaxObjectsToScan);   
             }
             $userOwnedObjects = $userCreatedObjects
         }
@@ -152,15 +152,15 @@ class AADResourceResolver: Resolver
                 }
                 if ($this.ShouldBatchScan)
                 {
-                    $appObjects = [array] (Get-MgApplication -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $appObjects =  @(Get-MgApplication -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $appObjects = [array] (Get-MgApplication -Top $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $appObjects =  @(Get-MgApplication -Top $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
             }
             else {
-                $appObjects = [array] ($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.application'})
+                $appObjects = @($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.application'})
             }
 
             $appTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -188,15 +188,15 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $spnObjects = [array] (Get-MgServicePrincipal -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $spnObjects = @(Get-MgServicePrincipal -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $spnObjects = [array] (Get-MgServicePrincipal -Top $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $spnObjects = @(Get-MgServicePrincipal -Top $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
             }
             else {
-                $spnObjects = [array] ($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.servicePrincipal'})
+                $spnObjects = @($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.servicePrincipal'})
             }
             
             $spnTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -223,21 +223,21 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $deviceObjects = [array] (Get-MgDevice -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $deviceObjects = @(Get-MgDevice -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $deviceObjects = [array] (Get-MgDevice -Top $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $deviceObjects = @(Get-MgDevice -Top $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
             }
             else {
                 if ($this.ShouldBatchScan)
                 {
-                    $DeviceObjects = [array] (Get-MgUserOwnedDevice -UserId $currUser -PageSize)
+                    $DeviceObjects = @(Get-MgUserOwnedDevice -UserId $currUser -PageSize)
                 }
                 else
                 {
-                    $DeviceObjects = [array] (Get-MgUserOwnedDevice -UserId $currUser -Top $this.MaxObjectsToScan)
+                    $DeviceObjects = @(Get-MgUserOwnedDevice -UserId $currUser -Top $this.MaxObjectsToScan)
                 }
             }
             
@@ -266,15 +266,15 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $userObjects = [array] (Get-MgUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $userObjects = @(Get-MgUser -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $userObjects = [array] (Get-MgUser -Top $this.MaxObjectsToScan -Property Id, DisplayName)
+                    $userObjects = @(Get-MgUser -Top $this.MaxObjectsToScan -Property Id, DisplayName)
                 }
             }
             else {
-                $userObjects = [array] (Get-MgUser -UserId $currUser -Property Id, DisplayName)
+                $userObjects = @(Get-MgUser -UserId $currUser -Property Id, DisplayName)
             }
 
             $userTypeMapping = ([SVTMapping]::AADResourceMapping |
@@ -302,15 +302,15 @@ class AADResourceResolver: Resolver
             {
                 if ($this.ShouldBatchScan)
                 {
-                    $grpObjects = [array] (Get-MgGroup -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
+                    $grpObjects = @(Get-MgGroup -PageSize $this.BatchThreshold -All -Limit $this.MaxObjectsToScan -Property Id, DisplayName);
                 }
                 else
                 {
-                    $grpObjects = [array] (Get-MgGroup -Top $this.MaxObjectsToScan -Property Id, DisplayName)
+                    $grpObjects = @(Get-MgGroup -Top $this.MaxObjectsToScan -Property Id, DisplayName)
                 }
             }
             else {
-                $grpObjects = [array] ($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.group'})
+                $grpObjects = @($userOwnedObjects | Where-Object {$_.AdditionalProperties."@odata.type" -eq '#microsoft.graph.group'})
             }
 
             $grpTypeMapping = ([SVTMapping]::AADResourceMapping |

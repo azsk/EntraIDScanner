@@ -431,7 +431,7 @@ class UsageTelemetry: ListenerBase {
 				# No need to break execution
 			}
 			try{
-				# $azureContext = [AccountHelper]::GetCurrentRmContext()
+				# $azureContext = [AccountHelper]::GetCurrentAzAcontext()
 				# try{
 				# 	$Properties.Add([TelemetryKeys]::tenantId, [RemoteReportHelper]::Mask($azureContext.Subscription.Id))
 				# }
@@ -566,7 +566,7 @@ class UsageTelemetry: ListenerBase {
 				# No need to break execution
 			}
 			try{
-				# $azureContext = [AccountHelper]::GetCurrentRmContext()
+				# $azureContext = [AccountHelper]::GetCurrentAzAcontext()
 				# try{
 				# 	$eventObj.properties.Add([TelemetryKeys]::tenantId, [RemoteReportHelper]::Mask($azureContext.Subscription.Id))
 				# }
