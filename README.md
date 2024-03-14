@@ -13,21 +13,11 @@ Open Windows PowerShell ISE or Windows PowerShell terminal and run the following
 
 3. `Register-PSRepository -Name PoshTestGallery -SourceLocation https://www.poshtestgallery.com/api/v2/ -InstallationPolicy Trusted`
 <br>Registers a PowerShell repository.
-<br>(Set the gallery name to __PSGallery__ for the prod version and __PoshTestGallery__ for dev version/bugbash purpose.)
+<br>(Set the gallery name to __PSGallery__ for the prod version and __PoshTestGallery__ for dev version/bugbash purpose)
 
-4. Install the dependencies:<br>
-`Install-Module -Name Az.Accounts -RequiredVersion 2.12.1 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-`Install-Module -Name Az.Resources -RequiredVersion 2.0.1 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-`Install-Module -Name Microsoft.Graph.Applications -RequiredVersion 2.12.0 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-`Install-Module -Name Microsoft.Graph.Users -RequiredVersion 2.12.0 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-`Install-Module -Name Microsoft.Graph.Groups -RequiredVersion 2.12.0 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-`Install-Module -Name Microsoft.Graph.Identity.DirectoryManagement -RequiredVersion 2.12.0 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-`Install-Module -Name Microsoft.Graph.DirectoryObjects -RequiredVersion 2.12.0 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-`Install-Module -Name Microsoft.Graph.Authentication -RequiredVersion 2.12.0 -Force -Scope CurrentUser -Repository PSGallery -AllowClobber`<br>
-
-5. Install latest version of the module<br>
+4. Install latest version of the module from PoshTestGallery<br>
 `Install-module AzSKStaging.AAD -Repository PoshTestGallery -Force -AllowClobber -Scope CurrentUser`
-
+<br>(Prod version: `Install-module AzSK.AAD -Repository PSGallery -Force -AllowClobber -Scope CurrentUser`)
 
 ## Running the scanner: 
 1. `ipmo AzSKStaging.AAD`
