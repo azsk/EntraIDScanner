@@ -255,7 +255,7 @@ class AccountHelper {
             [AccountHelper]::ScanType = [CommandType]::AAD
             [AccountHelper]::currentMgContext = $mgCtx
             [AccountHelper]::currentMgUserObject = $mgUserObj
-            [AccountHelper]::tenantInfoMsg = "Entra ID Tenant Info: `n`tTenantId: $($mgCtx.TenantId)"
+            [AccountHelper]::tenantInfoMsg = "AAD Tenant Info: `n`tTenantId: $($mgCtx.TenantId)"
         }
 
         [AccountHelper]::RefreshMgContextToken();

@@ -281,11 +281,11 @@ class WriteSummaryFile: FileOutputBase
 					else 
 					{
 						$csvItem.IsControlInGrace = "No"
-					}					
+					}
                     $csvItems += $csvItem;
-                }                                
+                }
             }
-        } 
+        }
 
         if ($csvItems.Count -gt 0) {
 			# Remove Null properties

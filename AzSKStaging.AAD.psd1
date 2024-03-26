@@ -12,7 +12,7 @@
     RootModule             = '.\AzSK.EntraID.psm1'
 
     # Version number of this module.
-    ModuleVersion          = '0.9.1'
+    ModuleVersion          = '0.9.5'
 
     # ID used to uniquely identify this module
     GUID                   = 'b9bba5c3-9036-4163-b0b0-6d4e83519b0a'
@@ -27,7 +27,7 @@
     Copyright              = '(c) 2019 Microsoft Corporation. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description            = 'Security Checks for Entra ID (Preview)'
+    Description            = 'Security Checks for AAD (Preview)'
 
     # Minimum version of the Windows PowerShell engine required by this module
     PowerShellVersion      = '5.0'
@@ -76,7 +76,7 @@
   
     # Functions to export from this module
     FunctionsToExport      = @(
-        'Get-AzSKEntraIDSecurityStatusTenant', 'Get-AzSKEntraIDSecurityStatusUser', 'Set-AzSKMonitoringSettings', 
+        'Get-AzSKAADSecurityStatusTenant', 'Get-AzSKAADSecurityStatusUser', 'Set-AzSKMonitoringSettings', 
         'Set-AzSKLocalAIOrgTelemetrySettings', 'Set-AzSKUsageTelemetryLevel' 
     )
 
@@ -98,7 +98,15 @@
     # Private data to pass to the module specified in RootModule/ModuleToProcess
     PrivateData            = @{
         PSData = @{
-
+            ExternalModuleDependencies = @(
+                'Az.Accounts',
+                'Az.Resources',
+                'Microsoft.Graph.Applications',
+                'Microsoft.Graph.Users',
+                'Microsoft.Graph.Groups',
+                'Microsoft.Graph.Identity.DirectoryManagement',
+                'Microsoft.Graph.DirectoryObjects',
+                'Microsoft.Graph.Authentication')
             # Tags applied to this module. These help with module discovery in online galleries.
             Tags         = 'AAD', 'AzSK', 'AzureActiveDirectory', 'AADSecurity'
 

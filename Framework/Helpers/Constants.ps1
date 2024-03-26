@@ -176,7 +176,7 @@ class Constants
 	static [string] $GraphApplicationUrl = "https://graph.microsoft.com/beta/myorganization/applications(appId='{0}')"
 	static [string] $AADAPIUrl = "https://main.iam.ad.ext.azure.com"
 	static [string] $RegExForValidURL = "(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})"
-	static [string] $DefaultAdditionalDetail = "No additional details found. Please check the detailed logs."
+	static [string] $DefaultAdditionalDetail = "No additional details found. Please check the detailed log file."
 
 	static [void] SetAzSKModuleName($moduleName)
 	{

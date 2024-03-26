@@ -1,5 +1,5 @@
 Set-StrictMode -Version Latest
-function Get-AzSKEntraIDSecurityStatusTenant
+function Get-AzSKAADSecurityStatusTenant
 {
 	<#
 	.SYNOPSIS
@@ -85,7 +85,7 @@ function Get-AzSKEntraIDSecurityStatusTenant
 
 
 
-function Get-AzSKEntraIDSecurityStatusUser
+function Get-AzSKAADSecurityStatusUser
 {
 	<#
 	.SYNOPSIS
