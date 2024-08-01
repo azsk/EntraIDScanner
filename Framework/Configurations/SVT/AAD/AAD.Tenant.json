@@ -365,6 +365,23 @@
             "Privacy"
           ],
           "Enabled": false
+        },
+        {
+          "ControlID": "EntraID_Tenant_CAP_AuthN_Setup_Policies",
+          "Description": "Ensure that Conditional Access Policies are setup for tenant",
+          "Id": "Tenant280",
+          "ControlSeverity": "High",
+          "Automated": "Yes",
+          "MethodName": "CheckCAPAuthNPolicySetup",
+          "Rationale": "CAP allows to prevent malicious attacks on tenants by reducing conditions that compromise user accounts and prevent further compromise by taking approprate actions ",
+          "Recommendation": "1. Go to entra admin center --> 2. Navigate to conditonal access under Protection --> 3. Under policies, create all policies (i) Block all legacy sign ins (Users - all, Target Resources - All cloud apps, Conditions - Client Apps - Legacy auth clients, Block Access)  (ii) Require MFA and a password change when high-risk users are detected (Users - all, Target Resources - All cloud apps, Conditions - User risk - high, Grant Access - Require MFA and Require password change)  (iii) Require MFA for all users (Users - all, Target Resources - All cloud apps,, Grant Access - Require MFA or Require MFA/Passwordless authentication strength)  (iv) Require MFA when risky sign ins are detected (Users - all, Target Resources - All cloud apps, Conditions - sign in risk - high, medium, Grant Access - Require MFA or Require MFA/Passwordless authentication strength) or enable security defaults",
+          "Tags": [
+            "SDL",
+            "TCP",
+            "Automated",
+            "Privacy"
+          ],
+          "Enabled": true
         }
       ]
     }

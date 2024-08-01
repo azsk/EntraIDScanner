@@ -53,6 +53,40 @@
         "AuthN"
       ],
       "Enabled": false
+    },
+    {
+      "ControlID": "EntraID_User_AuthZ_Disable_Guest_Self_Service_Signup_Flow",
+      "Description": "Do not enable guest self-service sign up via user flows",
+      "Id": "User140",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckGuestSelfServiceSignupFlow",
+      "Rationale": "Enabling guest self service signup flow, would mean any application could use flows to create guest accounts in the owning tenant.",
+      "Recommendation": "1. Navigate to 'Users' in Entra admin center --> 2. Select 'User Settings', navigate to 'External  users' section and select 'Manage external collaboration settings' --> 3. Navigate to 'Guest Invite settings' to find 'Enable guest self-service sign up via user flows' and set it to 'No'",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthN"
+      ],
+      "Enabled": true
+    },
+    {
+      "ControlID": "EntraID_User_AuthZ_Limit_Invite_Permissions_To_Admins",
+      "Description": "Limit guest invite permissions to admins",
+      "Id": "User150",
+      "ControlSeverity": "High",
+      "Automated": "Yes",
+      "MethodName": "CheckGuestInviteSettings",
+      "Rationale": "Inviting guests is mainly used for business collaboration and should generally be done either by the global admin or by a user assigned with appropriate role, otherwise malicious actors can invite any number of guests to potentially bloat the directory.",
+      "Recommendation": "1. Navigate to 'Users' in Entra admin center --> 2. Select 'User Settings', navigate to 'External  users' section and select 'Manage external collaboration settings' --> 3. Navigate to 'Guest Invite settings' to find 'Guest Invite restrictions' --> 4. Configure the restrictions such that its set to one of the below mentioned values: i) Member users and users assigned to specific admin roles can invite guest users including guests with member permissions ii) Only users assigned to specific admin roles can invite guest users iii) No one in the organization can invite guest users including admins (most restrictive)",
+      "Tags": [
+        "SDL",
+        "TCP",
+        "Automated",
+        "AuthN"
+      ],
+      "Enabled": true
     }
 ]
 }
