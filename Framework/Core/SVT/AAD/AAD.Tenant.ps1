@@ -692,4 +692,89 @@ class Tenant: SVTBase
         }
         return $controlResult;
     }
+
+    hidden [ControlResult] CheckCAPAuthNPolicySetup([ControlResult] $controlResult)
+	{
+        # Connect-MgGraph -Scopes "Policy.Read.All" 
+        #(This need the admin access of the tenant and it is necessary to run this command before running the below commands to check that security default is enabled or not)
+        
+        #It is used to find that Security default is Enabled or not
+        $SecurityDefault=Get-MgBetaPolicyIdentitySecurityDefaultEnforcementPolicy|  Select-Object IsEnabled
+
+        if($SecurityDefault.IsEnabled -eq $true){
+            #If the Security Default is enabled then it will return the passed message
+            $controlResult.AddMessage([VerificationResult]::Passed,
+                                [MessageData]::new("Security Default is enabled."));
+            return $controlResult;                  
+        }
+        
+        #It is used to get all the CAP Policies
+        $policy=Get-MgBetaIdentityConditionalAccessPolicy
+
+        #It is used to store the Conditional Access Policies
+        $BlockLegacyAuth=$null
+        $MFAforAllUsers=$null
+        $PasswordChangeForHishRiskUser=$null
+        $MFAforRiskySignIns=$null
+
+        #Checks if any Conditional Access Policy is added
+        foreach($obj in $policy){
+            #Checks if Block legacy authentication policy is added
+            if($obj.DisplayName -eq "Block legacy authentication"){
+                $BlockLegacyAuth=$obj
+            }
+            #Checks if Require multifactor authentication for all users policy is added
+            elseif($obj.DisplayName -eq "Require multifactor authentication for all users"){
+                $MFAforAllUsers=$obj
+            }
+            #Checks if Require password change for high-risk users policy is added
+            elseif($obj.DisplayName -eq "Require password change for high-risk users"){
+                $PasswordChangeForHishRiskUser=$obj
+            }
+            #Checks if Require multifactor authentication for risky sign-ins policy is added
+            elseif($obj.DisplayName -eq "Require multifactor authentication for risky sign-ins"){
+                $MFAforRiskySignIns=$obj
+            }
+        }
+        
+        #Checks if any of the policy is not added
+        if($BlockLegacyAuth -eq $null -or $MFAforAllUsers -eq $null-or $PasswordChangeForHishRiskUser-eq $null -or $MFAforRiskySignIns -eq $null){
+            $controlResult.AddMessage([VerificationResult]::Failed,
+                                [MessageData]::new("Conditional Access Policy is not configured."));
+        }
+        else {
+            #checks if Block Legacy Authentication policy is enabled and configured correctly
+            if ($BlockLegacyAuth.State -eq "enabled" -and $BlockLegacyAuth.Conditions.Users.IncludeUsers -contains "All" -and $BlockLegacyAuth.Conditions.Applications.IncludeApplications -contains "All" -and $BlockLegacyAuth.GrantControls.BuiltInControls -contains "block") {
+                # checks if Require multifactor authentication for all users policy is enabled and configured correctly
+                if ($MFAforAllUsers.State -eq "enabled" -and $MFAforAllUsers.Conditions.Users.IncludeUsers -contains "All" -and $MFAforAllUsers.Conditions.Applications.IncludeApplications -contains "All" -and $MFAforAllUsers.GrantControls.BuiltInControls -contains "mfa") {
+                    # checks if Require password change for high-risk users policy is enabled and configured correctly
+                    if ($PasswordChangeForHishRiskUser.State -eq "enabled" -and $PasswordChangeForHishRiskUser.Conditions.Users.IncludeUsers -contains "All" -and $PasswordChangeForHishRiskUser.Conditions.Applications.IncludeApplications -contains "All" -and $PasswordChangeForHishRiskUser.Conditions.UserRiskLevels -contains "high" -and $PasswordChangeForHishRiskUser.GrantControls.BuiltInControls -contains "mfa" -and $PasswordChangeForHishRiskUser.GrantControls.BuiltInControls -contains "passwordChange") {
+                        #Checks if Require multifactor authentication for risky sign-ins policy is enabled and configured correctly
+                        if ($MFAforRiskySignIns.State -eq "enabled" -and $MFAforRiskySignIns.Conditions.Users.IncludeUsers -contains "All" -and $MFAforRiskySignIns.Conditions.Applications.IncludeApplications -contains "All" -and $MFAforRiskySignIns.Conditions.SignInRiskLevels -contains "medium" -and $MFAforRiskySignIns.Conditions.SignInRiskLevels -contains "high" -and $MFAforRiskySignIns.GrantControls.BuiltInControls -contains "mfa" ) {
+                            $controlResult.AddMessage([VerificationResult]::Passed,
+                                [MessageData]::new("Conditional Access Policy is configured correctly."));
+                        }
+                        else {
+                            $controlResult.AddMessage([VerificationResult]::Failed,
+                                [MessageData]::new("Conditional Access Policy is not configured."));
+                        }
+                    }
+                    else {
+                        $controlResult.AddMessage([VerificationResult]::Failed,
+                            [MessageData]::new("Conditional Access Policy is not configured."));
+                    }
+                }
+                else {
+                    $controlResult.AddMessage([VerificationResult]::Failed,
+                        [MessageData]::new("Conditional Access Policy is not configured."));
+                }
+            }
+            else {
+                $controlResult.AddMessage([VerificationResult]::Failed,
+                    [MessageData]::new("Conditional Access Policy is not configured."));
+            }
+        }  
+        return $controlResult;
+    }
+    
 }#class

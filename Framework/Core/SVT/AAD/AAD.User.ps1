@@ -72,4 +72,45 @@ class User: SVTBase
         
         return $controlResult;
     }
+
+    hidden [ControlResult] CheckGuestSelfServiceSignupFlow([ControlResult] $controlResult)
+	{
+        # Connect-MgGraph -Scopes "Policy.Read.All"
+        # (This need the admin access of the tenant and it is necessary to run this command before running the below commands)
+
+        #Get the self-service sign up policy
+        $property=Get-MgBetaPolicyAuthenticationFlowPolicy | Select-Object selfServiceSignUp
+        #Check if self-service sign up is enabled
+        if($property.SelfServiceSignUp.IsEnabled -eq $true)
+        {
+            $controlResult.AddMessage([VerificationResult]::Failed,
+                                "Guest self-service sign up via user flows is enabled. Please review!");
+        }
+        #If self-service sign up is disabled
+        else
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+                                "Guest self-service sign up via user flows is disabled.");
+        }
+        return $controlResult;
+    }
+
+    hidden [ControlResult] CheckGuestInviteSettings([ControlResult] $controlResult)
+	{
+        # Check if anyone in the organization is allowed to invite guests    
+        $inviteRestrictions=Get-MgBetaPolicyAuthorizationPolicy | Select-Object allowInvitesFrom
+        #If everyone is allowed to invite guests
+        if($inviteRestrictions.AllowInvitesFrom -eq "everyone")
+        {
+            $controlResult.AddMessage([VerificationResult]::Failed,
+                                "Anyone in the organization is allowed to invite guests. Please review!");
+        }
+        #If only specific people are allowed to invite guests
+        else
+        {
+            $controlResult.AddMessage([VerificationResult]::Passed,
+                                "Only specific people are allowed to invite guests.");
+        }
+        return $controlResult;
+    }
 }
